@@ -1,0 +1,2609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaCore | Role Intelligence Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0F1C33;
+    --navy-2:#16264A;
+    --gold:#C9A227;
+    --cream:#F6F3EC;
+    --ink:#0F1C33;
+    --slate:#4A5568;
+    --line:rgba(15,28,51,0.12);
+    --mkt:#C9A227;
+    --tech:#4C7A97;
+    --brand:#B5652D;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth; -webkit-text-size-adjust:100%; text-size-adjust:100%;}
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  img, svg, table{max-width:100%;}
+  p, li, .desc, .subline{overflow-wrap:break-word; word-break:break-word;}
+  ::selection{background:var(--gold); color:var(--navy);}
+
+  /* ---------- Header ---------- */
+  header{
+    background:var(--navy);
+    color:#fff;
+    padding:0 6vw;
+  }
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:20px 0;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+  }
+  .logo{
+    font-family:'Fraunces',serif;
+    font-size:1.3rem;
+    font-weight:600;
+    letter-spacing:0.02em;
+  }
+  .logo span{color:var(--gold);}
+  .sync{
+    display:flex; align-items:center; gap:8px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.72rem;
+    color:rgba(255,255,255,0.65);
+    letter-spacing:0.03em;
+  }
+  .dot{
+    width:7px; height:7px; border-radius:50%;
+    background:#3EBD7E;
+    box-shadow:0 0 0 0 rgba(62,189,126,0.6);
+    animation:pulse 2.2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(62,189,126,0.55);}
+    70%{box-shadow:0 0 0 7px rgba(62,189,126,0);}
+    100%{box-shadow:0 0 0 0 rgba(62,189,126,0);}
+  }
+  .hero{
+    padding:64px 0 56px;
+    display:grid;
+    grid-template-columns:1.3fr 1fr;
+    gap:40px;
+    align-items:end;
+  }
+  .hero h1{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:clamp(2.1rem,4vw,3.2rem);
+    line-height:1.08;
+    max-width:14ch;
+  }
+  .hero h1 em{
+    font-style:italic;
+    color:var(--gold);
+  }
+  .hero p{
+    color:rgba(255,255,255,0.7);
+    font-size:0.98rem;
+    max-width:46ch;
+    margin-top:14px;
+  }
+  .hero-stats{
+    display:flex;
+    gap:0;
+    border-top:1px solid rgba(255,255,255,0.15);
+  }
+  .hstat{
+    flex:1;
+    padding:16px 18px 0;
+    border-left:1px solid rgba(255,255,255,0.15);
+  }
+  .hstat:first-child{border-left:none;}
+  .hstat .n{font-family:'Fraunces',serif; font-size:1.6rem; color:var(--gold);}
+  .hstat .l{font-size:0.72rem; color:rgba(255,255,255,0.55); text-transform:uppercase; letter-spacing:0.06em; margin-top:2px;}
+
+  /* ---------- Vertical tabs ---------- */
+  .tabs{
+    padding:0 6vw;
+    margin-top:-1px;
+    background:var(--cream);
+    position:sticky; top:0; z-index:20;
+    border-bottom:1px solid var(--line);
+  }
+  .tab-row{
+    display:flex; gap:6px;
+    padding-top:18px;
+  }
+  .tab{
+    appearance:none; border:none; background:none; cursor:pointer;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:0.85rem;
+    padding:12px 20px 14px;
+    color:var(--slate);
+    border-bottom:3px solid transparent;
+    display:flex; align-items:center; gap:8px;
+    transition:color .2s;
+  }
+  .tab .swatch{width:8px; height:8px; border-radius:50%;}
+  .tab[data-v="marketing"] .swatch{background:var(--mkt);}
+  .tab[data-v="technology"] .swatch{background:var(--tech);}
+  .tab[data-v="branding"] .swatch{background:var(--brand);}
+  .tab.active{color:var(--ink);}
+  .tab.active[data-v="marketing"]{border-color:var(--mkt);}
+  .tab.active[data-v="technology"]{border-color:var(--tech);}
+  .tab.active[data-v="branding"]{border-color:var(--brand);}
+
+  /* ---------- Controls ---------- */
+  .controls{
+    max-width:100%;
+    padding:26px 6vw 0;
+    display:flex; gap:12px; flex-wrap:wrap; align-items:center;
+  }
+  .search{
+    flex:1; min-width:220px;
+    position:relative;
+  }
+  .search input{
+    width:100%;
+    padding:12px 16px 12px 38px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:#fff;
+    font-family:'Inter'; font-size:0.9rem;
+    color:var(--ink);
+  }
+  .search input:focus{outline:2px solid var(--gold); outline-offset:1px;}
+  .search::before{
+    content:"⌕";
+    position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    color:var(--slate); font-size:1.1rem;
+  }
+  .level-filter{display:flex; gap:6px;}
+  .chip{
+    padding:9px 14px;
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:999px;
+    font-size:0.78rem; font-weight:600; color:var(--slate);
+    cursor:pointer;
+  }
+  .chip.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .count{
+    font-family:'JetBrains Mono',monospace;
+    font-size:0.75rem; color:var(--slate);
+    white-space:nowrap;
+  }
+
+  /* ---------- Job grid ---------- */
+  main{padding:26px 6vw 10px;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(min(320px,100%),1fr));
+    gap:16px;
+    margin-top:18px;
+  }
+  .card{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:22px;
+    cursor:pointer;
+    transition:transform .15s, box-shadow .15s, border-color .15s;
+    border-top:3px solid var(--mkt);
+  }
+  .card[data-v="technology"]{border-top-color:var(--tech);}
+  .card[data-v="branding"]{border-top-color:var(--brand);}
+  .card:hover{transform:translateY(-3px); box-shadow:0 12px 24px rgba(15,28,51,0.08);}
+  .card .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:0.74rem;
+    color:var(--slate); text-transform:uppercase; letter-spacing:0.05em;
+  }
+  .card h3{
+    font-family:'Fraunces',serif; font-weight:600;
+    font-size:1.2rem; margin-top:6px;
+  }
+  .card p.desc{
+    color:var(--slate); font-size:0.85rem; margin-top:10px;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .card .meta{
+    display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;
+  }
+  .tag{
+    font-size:0.7rem; font-weight:600; color:var(--navy);
+    background:var(--cream); padding:4px 9px; border-radius:6px;
+  }
+  .empty{
+    text-align:center; padding:60px 20px; color:var(--slate);
+    font-family:'Fraunces',serif; font-size:1.1rem;
+  }
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed; inset:0; background:rgba(15,28,51,0.55);
+    display:none; align-items:flex-start; justify-content:center;
+    padding:5vh 20px; z-index:100; overflow-y:auto;
+    backdrop-filter:blur(2px);
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:#fff; border-radius:14px; max-width:680px; width:100%;
+    padding:40px; position:relative; margin-bottom:5vh;
+  }
+  .modal .close{
+    position:absolute; top:20px; right:20px;
+    width:32px; height:32px; border-radius:50%;
+    border:1px solid var(--line); background:none; cursor:pointer;
+    font-size:1rem; color:var(--slate);
+  }
+  .modal-eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:0.72rem;
+    text-transform:uppercase; letter-spacing:0.05em; color:var(--slate);
+  }
+  .modal h2{
+    font-family:'Fraunces',serif; font-size:1.9rem; margin-top:6px; padding-right:30px;
+  }
+  .modal .subline{color:var(--slate); font-size:0.9rem; margin-top:6px;}
+  .modal .meta{display:flex; gap:10px; margin-top:16px;}
+  .modal-section{margin-top:26px;}
+  .modal-section h4{
+    font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em;
+    color:var(--gold); font-weight:700; margin-bottom:10px;
+  }
+  .modal-section ul{padding-left:18px;}
+  .modal-section li{margin-bottom:7px; font-size:0.92rem; color:#2b3548;}
+  .modal-section p{font-size:0.92rem; color:#2b3548;}
+
+  /* ---------- Automation note ---------- */
+  .auto-note{
+    margin:44px 6vw 0;
+    background:var(--navy); color:#fff;
+    border-radius:14px; padding:26px 28px;
+    display:grid; grid-template-columns:auto 1fr; gap:20px; align-items:flex-start;
+  }
+  .auto-note .icon{
+    font-family:'JetBrains Mono',monospace; font-size:0.7rem;
+    background:var(--gold); color:var(--navy); font-weight:700;
+    padding:6px 10px; border-radius:6px;
+  }
+  .auto-note p{color:rgba(255,255,255,0.75); font-size:0.86rem; margin-top:6px; max-width:70ch;}
+  .auto-note h4{font-family:'Fraunces',serif; font-size:1.05rem;}
+
+  /* ---------- News ---------- */
+  .news{padding:56px 6vw 70px;}
+  .news-head{display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap;}
+  .news-head h2{
+    font-family:'Fraunces',serif; font-size:1.8rem;
+  }
+  .news-head p{color:var(--slate); font-size:0.88rem; margin-top:4px; max-width:50ch;}
+  .news-grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));
+    gap:16px; margin-top:26px;
+  }
+  .news-card{
+    background:#fff; border:1px solid var(--line); border-radius:12px; padding:22px;
+  }
+  .news-card .tag{background:var(--navy); color:#fff;}
+  .news-card h3{
+    font-family:'Fraunces',serif; font-size:1.05rem; margin-top:12px; line-height:1.3;
+  }
+  .news-card h3 a{color:var(--ink); text-decoration:none;}
+  .news-card h3 a:hover{color:var(--gold); text-decoration:underline;}
+  .news-card p{color:var(--slate); font-size:0.85rem; margin-top:10px;}
+  .news-card .src{
+    margin-top:14px; font-family:'JetBrains Mono',monospace; font-size:0.74rem;
+    color:var(--slate); opacity:0.7;
+  }
+
+  footer{
+    background:var(--navy); color:rgba(255,255,255,0.55);
+    padding:26px 6vw; font-size:0.78rem;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+  }
+
+  /* ---------- Job analysis (in modal) ---------- */
+  .analysis-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:12px;
+  }
+  .astat{
+    background:var(--cream); border-radius:8px; padding:12px 14px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .al{font-size:0.74rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--slate); font-weight:600;}
+  .av{font-family:'Fraunces',serif; font-size:1.05rem; color:var(--ink);}
+  .av.demand-High{color:#2E8B57;}
+  .av.demand-Medium{color:var(--gold);}
+  .av.demand-Low{color:var(--brand);}
+  .skill-tags{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+  .skilltag{
+    font-size:0.72rem; font-weight:600; color:var(--navy);
+    background:#EFE7D2; padding:5px 10px; border-radius:6px;
+  }
+  .sourceBtn{
+    width:100%; padding:13px; border:none; border-radius:8px;
+    background:var(--navy); color:#fff; font-family:'Inter'; font-weight:600;
+    font-size:0.85rem; cursor:pointer;
+  }
+  .sourceBtn:hover{background:var(--navy-2);}
+  .live-links{display:flex; flex-wrap:wrap; gap:8px;}
+  .live-pill{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:9px 14px; border-radius:999px; text-decoration:none;
+    font-size:0.78rem; font-weight:600; border:1px solid var(--line);
+    color:var(--navy); background:var(--cream);
+  }
+  .live-pill:hover{background:#EFE7D2;}
+  .live-pill.li{background:#EAF1F6; border-color:#C7DAE5;}
+  .live-pill.wz{background:#FDEFE0; border-color:#F0D3A8;}
+  .live-pill.bt{background:#EAF6EE; border-color:#C6E4CF;}
+  .live-pill.co{background:#F1EAF6; border-color:#DCC7E5;}
+
+  .comm-grid{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));
+    gap:14px; margin-top:20px;
+  }
+  .comm-card{
+    border:1px solid var(--line); border-radius:10px; padding:16px 18px;
+  }
+  .comm-card .swatch-lbl{display:flex; align-items:center; gap:7px; margin-bottom:10px;}
+  .comm-card .swatch-lbl .sw{width:8px; height:8px; border-radius:50%;}
+  .comm-card .swatch-lbl span{font-weight:700; font-size:0.85rem;}
+  .comm-links{display:flex; flex-direction:column; gap:6px;}
+  .comm-links a{
+    font-size:0.8rem; color:var(--navy); text-decoration:none; font-weight:600;
+  }
+  .comm-links a:hover{color:var(--gold); text-decoration:underline;}
+
+  /* ---------- Clients & Reports ---------- */
+  .clients-head{
+    display:flex; justify-content:space-between; align-items:flex-end; gap:20px; flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+  .clients-head h2{font-family:'Fraunces',serif; font-size:1.6rem;}
+  .clients-head p{color:var(--slate); font-size:0.88rem; margin-top:6px; max-width:60ch;}
+
+  .reminder-strip{display:flex; flex-direction:column; gap:8px; margin:22px 0;}
+  .reminder-chip{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 16px; border-radius:9px; font-size:0.85rem; font-weight:600;
+  }
+  .reminder-chip.overdue{background:#FBE7E4; color:#A23B2C;}
+  .reminder-chip.soon{background:#FCF1DB; color:#93691A;}
+  .reminder-chip .rc-action{
+    font-size:0.72rem; text-decoration:underline; cursor:pointer; font-weight:700;
+  }
+
+  .client-grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));
+    gap:16px;
+  }
+  .client-card{
+    background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px;
+    cursor:pointer; transition:transform .15s, box-shadow .15s;
+    border-top:3px solid var(--mkt);
+  }
+  .client-card[data-v="technology"]{border-top-color:var(--tech);}
+  .client-card[data-v="branding"]{border-top-color:var(--brand);}
+  .client-card:hover{transform:translateY(-3px); box-shadow:0 12px 24px rgba(15,28,51,0.08);}
+  .client-card h3{font-family:'Fraunces',serif; font-size:1.1rem;}
+  .client-card .co{color:var(--slate); font-size:0.82rem; margin-top:2px;}
+  .client-card .role{font-size:0.8rem; margin-top:10px; color:var(--navy); font-weight:600;}
+  .client-card .due-row{display:flex; justify-content:space-between; align-items:center; margin-top:14px;}
+  .due-badge{font-size:0.74rem; font-weight:700; padding:4px 9px; border-radius:6px; text-transform:uppercase; letter-spacing:0.03em;}
+  .due-badge.overdue{background:#FBE7E4; color:#A23B2C;}
+  .due-badge.soon{background:#FCF1DB; color:#93691A;}
+  .due-badge.ok{background:#E6F2EA; color:#2E7D50;}
+  .due-badge.none{background:var(--cream); color:var(--slate);}
+  .activity-count{font-size:0.72rem; color:var(--slate);}
+
+  /* client detail modal */
+  .cd-meta{display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;}
+  .activity-list{margin-top:16px; max-height:260px; overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:4px;}
+  .activity-item{background:var(--cream); border-radius:8px; padding:10px 12px;}
+  .activity-item .a-date{font-family:'JetBrains Mono',monospace; font-size:0.74rem; color:var(--slate);}
+  .activity-item .a-text{font-size:0.86rem; margin-top:3px; color:#2b3548;}
+  .add-activity-row{display:flex; gap:8px; margin-top:14px;}
+  .add-activity-row input{
+    flex:1; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-family:'Inter'; font-size:0.85rem;
+  }
+  .add-activity-row button{
+    padding:10px 16px; border:none; border-radius:8px; background:var(--navy); color:#fff; font-weight:600; font-size:0.8rem; cursor:pointer;
+  }
+  .report-box{
+    margin-top:18px; background:var(--navy); border-radius:10px; padding:20px;
+    font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:#DCE3EE;
+    white-space:pre-wrap; line-height:1.7; max-height:340px; overflow-y:auto;
+  }
+  .report-actions{display:flex; gap:8px; margin-top:12px;}
+  .del-client{
+    margin-top:20px; background:none; border:1px solid #E0B4AC; color:#A23B2C;
+    padding:8px 14px; border-radius:8px; font-size:0.76rem; font-weight:600; cursor:pointer;
+  }
+
+  /* ---------- Content Creator ---------- */
+  .algo-tips{display:flex; flex-direction:column; gap:12px; margin-top:20px;}
+  .algo-tip{
+    background:var(--cream); border-radius:8px; padding:12px 14px;
+    font-size:0.85rem; color:#2b3548; line-height:1.5;
+  }
+  .algo-tip b{color:var(--navy);}
+  .platform-tips{
+    background:var(--cream); border-radius:10px; padding:16px 18px; margin-bottom:16px;
+  }
+  .ptip-title{font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--gold); margin-bottom:10px;}
+  .ptip{font-size:0.82rem; color:#2b3548; margin-bottom:7px; line-height:1.5;}
+  .ptip:last-child{margin-bottom:0;}
+
+  /* ---------- Competitor Intelligence ---------- */
+  .comp-grid{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));
+    gap:16px; margin-top:22px;
+  }
+  .comp-card{
+    background:#fff; border:1px solid var(--line); border-radius:12px; padding:22px;
+    border-top:3px solid var(--navy);
+  }
+  .comp-card .comp-head{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;}
+  .comp-card h3{font-family:'Fraunces',serif; font-size:1.1rem; word-break:break-word;}
+  .comp-card .comp-type{
+    font-size:0.74rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;
+    background:var(--cream); color:var(--navy); padding:4px 8px; border-radius:6px;
+    white-space:normal; text-align:right; flex:0 1 auto;
+  }
+  .comp-card p{color:var(--slate); font-size:0.85rem; margin-top:10px; line-height:1.55;}
+  .comp-card .comp-edge{
+    margin-top:14px; padding-top:14px; border-top:1px solid var(--line);
+    font-size:0.8rem; color:#2b3548;
+  }
+  .comp-card .comp-edge b{color:var(--gold);}
+  .comp-card .comp-links{margin-top:12px; display:flex; gap:14px;}
+  .comp-card .comp-links a{font-size:0.78rem; font-weight:600; color:var(--navy); text-decoration:none;}
+  .comp-card .comp-links a:hover{color:var(--gold); text-decoration:underline;}
+  .comp-note{
+    margin-top:22px; background:var(--navy); color:rgba(255,255,255,0.8); border-radius:12px;
+    padding:20px 22px; font-size:0.85rem; line-height:1.6;
+  }
+  .comp-note b{color:var(--gold);}
+  .compare-table{width:100%; min-width:640px; border-collapse:collapse; font-size:0.82rem;}
+  .compare-table th{
+    text-align:left; padding:10px 14px; background:var(--navy); color:#fff;
+    font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; font-weight:700;
+  }
+  .compare-table th:first-child{border-radius:8px 0 0 0;}
+  .compare-table th:last-child{border-radius:0 8px 0 0;}
+  .compare-table td{padding:12px 14px; border-bottom:1px solid var(--line); color:#2b3548;}
+  .compare-table tr.nova-row td{background:#FBF6E9; font-weight:700; color:var(--navy);}
+  .compare-table tr:last-child td{border-bottom:none;}
+
+  /* ---------- Animations ---------- */
+  @keyframes fadeInUp{
+    from{opacity:0; transform:translateY(14px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .fade-in-up{animation:fadeInUp 0.5s ease both;}
+  @keyframes growBar{
+    from{width:0;}
+    to{width:var(--target);}
+  }
+  @keyframes popIn{
+    from{opacity:0; transform:scale(0.92);}
+    to{opacity:1; transform:scale(1);}
+  }
+
+  /* ---------- Competitor card enrichment ---------- */
+  .comp-meta-row{
+    display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;
+    font-size:0.72rem; color:var(--slate); font-weight:600;
+  }
+  .comp-services{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px;}
+  .svc-tag{
+    font-size:0.74rem; font-weight:600; color:var(--navy);
+    background:var(--cream); padding:4px 9px; border-radius:6px;
+  }
+  .comp-pricing{
+    margin-top:12px; font-size:0.8rem; color:#2b3548; line-height:1.5;
+    background:#F4F0E4; border-radius:8px; padding:9px 12px;
+  }
+  .comp-pricing b{color:var(--gold);}
+  .sw-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px;
+  }
+  .sw-col{background:var(--cream); border-radius:8px; padding:12px 13px;}
+  .sw-title{font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--navy); margin-bottom:8px;}
+  .sw-col ul{padding-left:16px;}
+  .sw-col li{font-size:0.78rem; color:#2b3548; margin-bottom:6px; line-height:1.4;}
+  .sw-watchouts{background:#FBEFE9;}
+  .sw-watchouts .sw-title{color:#A2612C;}
+
+  /* ---------- Bar chart ---------- */
+  .bar-chart{display:flex; flex-direction:column; gap:16px; margin-top:22px;}
+  .bar-row{display:grid; grid-template-columns:150px 1fr 90px; align-items:center; gap:12px;}
+  .bar-label{font-size:0.82rem; font-weight:700; color:var(--navy);}
+  .bar-track{background:var(--cream); border-radius:6px; height:14px; overflow:hidden;}
+  .bar-fill{
+    height:100%; border-radius:6px;
+    background:linear-gradient(90deg, var(--gold), #E0BE5C);
+    width:var(--target); animation:growBar 1.1s cubic-bezier(.22,1,.36,1) both;
+  }
+  .bar-value{font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:var(--slate); text-align:right;}
+
+  /* ---------- Timeline ---------- */
+  .timeline-wrap{position:relative; height:100px; margin:40px 20px 10px;}
+  .timeline-line{position:absolute; top:6px; left:0; right:0; height:2px; background:var(--line);}
+  .tl-dot{position:absolute; top:0; transform:translateX(-50%); text-align:center;}
+  .tl-point{
+    width:12px; height:12px; border-radius:50%; background:var(--tech);
+    margin:0 auto; border:2px solid #fff; box-shadow:0 0 0 1px var(--line);
+    animation:popIn 0.5s ease both;
+  }
+  .tl-dot.tl-nova .tl-point{background:var(--gold); width:16px; height:16px;}
+  .tl-label{
+    margin-top:10px; font-size:0.74rem; font-weight:700; color:var(--navy); white-space:nowrap;
+  }
+  .tl-label span{display:block; font-weight:400; color:var(--slate); font-family:'JetBrains Mono',monospace; font-size:0.72rem;}
+  .tl-dot.tl-nova .tl-label{color:#93691A;}
+  .tl-mobile-list{display:none;}
+  .tl-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 14px; border-bottom:1px solid var(--line); font-size:0.85rem;
+  }
+  .tl-row:last-child{border-bottom:none;}
+  .tl-year{font-family:'JetBrains Mono',monospace; color:var(--slate); font-size:0.78rem;}
+  .tl-name{font-weight:700; color:var(--navy);}
+  .tl-nova-row{background:#FBF6E9; border-radius:8px; padding-left:14px;}
+  .tl-nova-row .tl-name{color:#93691A;}
+
+  /* ---------- CV Analysis ---------- */
+  .cv-results{margin-top:28px;}
+  .cv-score-row{
+    display:flex; align-items:center; gap:28px; flex-wrap:wrap;
+    background:var(--navy); border-radius:14px; padding:26px 28px; color:#fff;
+  }
+  .cv-gauge{position:relative; width:120px; height:120px; flex:0 0 auto;}
+  .cv-gauge svg{transform:rotate(-90deg);}
+  .cv-gauge-num{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    flex-direction:column;
+  }
+  .cv-gauge-num b{font-family:'Fraunces',serif; font-size:1.9rem;}
+  .cv-gauge-num span{font-size:0.65rem; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:0.05em;}
+  .cv-verdict{flex:1; min-width:200px;}
+  .cv-verdict h3{font-family:'Fraunces',serif; font-size:1.3rem; color:var(--gold);}
+  .cv-verdict p{color:rgba(255,255,255,0.75); font-size:0.88rem; margin-top:6px; max-width:60ch;}
+
+  .cv-subscores{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:14px; margin-top:20px;
+  }
+  .cv-sub{background:#fff; border:1px solid var(--line); border-radius:10px; padding:14px 16px;}
+  .cv-sub .cs-top{display:flex; justify-content:space-between; font-size:0.78rem; font-weight:700; color:var(--navy); margin-bottom:8px;}
+  .cv-sub .bar-track{height:8px;}
+
+  .cv-panels{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:22px;}
+  .cv-panel{background:#fff; border:1px solid var(--line); border-radius:10px; padding:18px 20px;}
+  .cv-panel h4{font-size:0.75rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--gold); font-weight:700; margin-bottom:10px;}
+  .cv-panel ul{padding-left:18px;}
+  .cv-panel li{font-size:0.85rem; margin-bottom:7px; color:#2b3548; line-height:1.5;}
+  .cv-checklist{display:flex; flex-direction:column; gap:8px; margin-top:16px;}
+  .cv-check-item{display:flex; align-items:center; gap:10px; font-size:0.85rem;}
+  .cv-check-icon{width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; flex:0 0 auto;}
+  .cv-check-icon.yes{background:#E6F2EA; color:#2E7D50;}
+  .cv-check-icon.no{background:#FBE7E4; color:#A23B2C;}
+  .cv-kw-cloud{display:flex; flex-wrap:wrap; gap:7px; margin-top:6px;}
+  .kw-hit{font-size:0.72rem; font-weight:600; padding:4px 9px; border-radius:6px; background:#E6F2EA; color:#2E7D50;}
+  .kw-miss{font-size:0.72rem; font-weight:600; padding:4px 9px; border-radius:6px; background:#FBE7E4; color:#A23B2C;}
+  .cv-disclaimer{
+    margin-top:20px; font-size:0.78rem; color:var(--slate); background:var(--cream);
+    padding:12px 14px; border-radius:8px; line-height:1.5;
+  }
+
+  /* ---------- Primary nav toggle ---------- */
+  .primary-nav{
+    display:flex; gap:8px; padding:16px 6vw 0;
+    background:var(--cream);
+    overflow-x:auto; -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+  }
+  .primary-nav .pnav-btn{flex:0 0 auto; white-space:nowrap;}
+  .pnav-btn{
+    appearance:none; border:1px solid var(--line); background:#fff; cursor:pointer;
+    font-family:'Inter'; font-weight:700; font-size:0.8rem; letter-spacing:0.02em;
+    padding:10px 18px; border-radius:8px 8px 0 0; color:var(--slate);
+    border-bottom:none;
+  }
+  .pnav-btn.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- Sourcing builder ---------- */
+  .sourcing-wrap{padding:0 6vw 20px;}
+  .sourcing-panel{
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:30px; margin-top:0;
+  }
+  .sourcing-panel h2{font-family:'Fraunces',serif; font-size:1.6rem;}
+  .sourcing-panel > p{color:var(--slate); font-size:0.88rem; margin-top:6px; max-width:65ch;}
+  .presets{display:flex; gap:8px; flex-wrap:wrap; margin-top:20px;}
+  .preset-chip{
+    font-size:0.76rem; font-weight:600; padding:8px 13px; border-radius:999px;
+    border:1px solid var(--line); background:var(--cream); color:var(--navy); cursor:pointer;
+  }
+  .form-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:22px;
+  }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field.full{grid-column:1 / -1;}
+  .field label{font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; color:var(--slate);}
+  .field input, .field select{
+    padding:11px 13px; border:1px solid var(--line); border-radius:8px; font-family:'Inter'; font-size:0.88rem;
+  }
+  .field small{color:var(--slate); font-size:0.72rem;}
+  .buildBtn{
+    margin-top:22px; padding:13px 22px; border:none; border-radius:8px;
+    background:var(--gold); color:var(--navy); font-weight:700; font-size:0.88rem; cursor:pointer;
+  }
+  .buildBtn:hover{filter:brightness(0.95);}
+  .output-block{
+    margin-top:28px; background:var(--navy); border-radius:12px; padding:22px; display:none;
+  }
+  .output-block.show{display:block;}
+  .output-row{margin-bottom:18px;}
+  .output-row:last-child{margin-bottom:0;}
+  .output-row .oh{
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;
+  }
+  .output-row h4{color:var(--gold); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em;}
+  .output-actions{display:flex; gap:8px;}
+  .mini-btn{
+    font-size:0.74rem; font-weight:700; padding:5px 10px; border-radius:5px;
+    border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.06); color:#fff; cursor:pointer;
+  }
+  .mini-btn:hover{background:rgba(255,255,255,0.14);}
+  .code-box{
+    font-family:'JetBrains Mono',monospace; font-size:0.78rem; color:#DCE3EE;
+    background:rgba(0,0,0,0.25); padding:14px 16px; border-radius:8px;
+    word-break:break-word; line-height:1.6;
+  }
+
+  @media(min-width:761px) and (max-width:1024px){
+    .hero{grid-template-columns:1fr; gap:24px;}
+    .hero-stats{margin-top:6px;}
+    .comp-grid, .client-grid, .grid{grid-template-columns:repeat(2,1fr);}
+    .comm-grid{grid-template-columns:repeat(2,1fr);}
+    .analysis-grid{grid-template-columns:repeat(2,1fr);}
+    .modal{max-width:640px;}
+    .compare-table{font-size:0.78rem;}
+  }
+  @media(max-width:760px){
+    .hero{grid-template-columns:1fr;}
+    .tab-row{overflow-x:auto;}
+    .form-grid{grid-template-columns:1fr;}
+    .analysis-grid{grid-template-columns:1fr 1fr;}
+    .sw-grid{grid-template-columns:1fr;}
+    .comp-grid, .client-grid, .comm-grid, .news-grid, .grid{grid-template-columns:1fr;}
+    .compare-table{font-size:0.72rem;}
+    .compare-table th, .compare-table td{padding:8px 8px;}
+    .modal{padding:26px 20px; max-width:94vw;}
+    .clients-head, .news-head{flex-direction:column; align-items:flex-start;}
+    .bar-row{grid-template-columns:100px 1fr 60px; gap:8px;}
+    .bar-label{font-size:0.72rem;}
+    .tl-desktop{display:none;}
+    .tl-mobile-list{display:block;}
+    .comp-card .comp-head{flex-direction:column; align-items:flex-start; gap:6px;}
+    .comp-card .comp-links{flex-wrap:wrap; row-gap:6px;}
+    .comp-meta-row span{flex:0 0 auto;}
+    .cv-panels{grid-template-columns:1fr;}
+    .cv-score-row{flex-direction:column; text-align:center;}
+    .cv-subscores{grid-template-columns:1fr 1fr;}
+    .timeline-wrap{margin:60px 10px 30px; height:130px;}
+    .tl-label{font-size:0.6rem;}
+    .output-actions{flex-wrap:wrap;}
+    .preview-card{max-width:100%;}
+  }
+  @media(max-width:480px){
+    .hero h1{font-size:1.7rem;}
+    .comp-meta-row{font-size:0.72rem;}
+    .add-activity-row{flex-direction:column;}
+    .add-activity-row button{width:100%;}
+    .comp-card, .card, .client-card, .news-card{padding:16px;}
+    .sourcing-panel, .clients-head, .modal{padding:20px;}
+    .modal{padding:22px 16px;}
+    .sw-grid{gap:8px;}
+    .sw-col{padding:10px;}
+    .primary-nav{padding:12px 4vw 0;}
+    .sourcing-wrap, main, .news{padding-left:4vw; padding-right:4vw;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="topbar">
+    <div class="logo">Nova<span>Core</span></div>
+    <div class="sync"><span class="dot"></span><span id="syncTime">SYNCING…</span></div>
+  </div>
+  <div class="hero">
+    <div>
+      <h1>Every role, <em>defined</em>. Every market, <em>tracked</em>.</h1>
+      <p>The living job-description library and market-intelligence feed for NovaCore's three verticals — built for headhunters who need the exact language of a role in seconds, not hours.</p>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="n" id="statMkt">0</div><div class="l">Marketing roles</div></div>
+      <div class="hstat"><div class="n" id="statTech">0</div><div class="l">Technology roles</div></div>
+      <div class="hstat"><div class="n" id="statBrand">0</div><div class="l">Branding roles</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="primary-nav">
+  <button class="pnav-btn active" data-view="library">Job Library</button>
+  <button class="pnav-btn" data-view="sourcing">Sourcing Search</button>
+  <button class="pnav-btn" data-view="clients">Clients &amp; Reports</button>
+  <button class="pnav-btn" data-view="content">Content Creator</button>
+  <button class="pnav-btn" data-view="competitors">Competitors</button>
+  <button class="pnav-btn" data-view="cv">CV Analysis</button>
+  <button class="pnav-btn" data-view="template">Template Writer</button>
+</div>
+
+<div class="view active" id="libraryView">
+  <div class="tabs">
+    <div class="tab-row">
+      <button class="tab active" data-v="marketing"><span class="swatch"></span>Marketing</button>
+      <button class="tab" data-v="technology"><span class="swatch"></span>Technology</button>
+      <button class="tab" data-v="branding"><span class="swatch"></span>Branding</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="search">
+      <input type="text" id="searchInput" placeholder="Search a role — e.g. “Performance Marketing”, “DevOps”, “Employer Branding”…">
+    </div>
+    <div class="level-filter" id="levelFilter">
+      <button class="chip active" data-level="all">All levels</button>
+      <button class="chip" data-level="Entry">Entry</button>
+      <button class="chip" data-level="Mid">Mid</button>
+      <button class="chip" data-level="Senior">Senior</button>
+      <button class="chip" data-level="Leadership">Leadership</button>
+    </div>
+    <div class="count" id="resultCount"></div>
+  </div>
+
+  <main>
+    <div class="grid" id="jobGrid"></div>
+    <div class="empty" id="emptyState" style="display:none;">No roles match that search — try a broader term.</div>
+  </main>
+</div>
+
+<div class="view" id="sourcingView">
+  <div class="sourcing-wrap">
+    <div class="sourcing-panel">
+      <h2>Boolean &amp; X-Ray Sourcing Builder</h2>
+      <p>Pick a role or type your own, add the skills that matter, and get a ready-to-paste Boolean string plus X-Ray search links for LinkedIn, Google and GitHub — built from NovaCore's sourcing library.</p>
+
+      <div class="presets" id="presetRow"></div>
+
+      <div class="form-grid">
+        <div class="field full">
+          <label>Job title(s)</label>
+          <input type="text" id="srcTitles" placeholder="e.g. Performance Marketing Specialist, Growth Marketer">
+          <small>Separate alternate titles with commas — they'll be OR'd together.</small>
+        </div>
+        <div class="field full">
+          <label>Must-have skills / keywords</label>
+          <input type="text" id="srcSkills" placeholder="e.g. Meta Ads Manager, Google Ads, GA4">
+        </div>
+        <div class="field">
+          <label>Location</label>
+          <input type="text" id="srcLocation" value="Cairo OR Egypt">
+        </div>
+        <div class="field">
+          <label>Exclude terms</label>
+          <input type="text" id="srcExclude" placeholder="e.g. intern, freelance">
+        </div>
+        <div class="field full">
+          <label>Current company (optional — X-Ray only)</label>
+          <input type="text" id="srcCompany" placeholder="e.g. Vodafone, Orange, Etisalat">
+        </div>
+      </div>
+
+      <button class="buildBtn" id="buildBtn">Build search strings</button>
+
+      <div class="output-block" id="outputBlock">
+        <div class="output-row">
+          <div class="oh"><h4>Boolean string</h4><div class="output-actions"><button class="mini-btn" data-copy="boolOut">Copy</button></div></div>
+          <div class="code-box" id="boolOut"></div>
+        </div>
+        <div class="output-row">
+          <div class="oh"><h4>LinkedIn X-Ray (Google)</h4><div class="output-actions"><button class="mini-btn" data-copy="liOut">Copy</button><button class="mini-btn" data-open="liOut">Open</button></div></div>
+          <div class="code-box" id="liOut"></div>
+        </div>
+        <div class="output-row">
+          <div class="oh"><h4>General web X-Ray (CVs / profiles)</h4><div class="output-actions"><button class="mini-btn" data-copy="webOut">Copy</button><button class="mini-btn" data-open="webOut">Open</button></div></div>
+          <div class="code-box" id="webOut"></div>
+        </div>
+        <div class="output-row" id="ghRow" style="display:none;">
+          <div class="oh"><h4>GitHub X-Ray (Technology roles)</h4><div class="output-actions"><button class="mini-btn" data-copy="ghOut">Copy</button><button class="mini-btn" data-open="ghOut">Open</button></div></div>
+          <div class="code-box" id="ghOut"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sourcing-panel" style="margin-top:16px;">
+      <h2>Communities &amp; Live Job Boards</h2>
+      <p>Quick jump into where the candidates actually are — per vertical.</p>
+      <div class="comm-grid" id="commGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="clientsView">
+  <div class="sourcing-wrap">
+    <div class="clients-head">
+      <div>
+        <h2>Clients &amp; Recruitment Reports</h2>
+        <p>Track every retainer, log what happens on each search, and generate a client-ready report the moment it's due — no separate doc to maintain.</p>
+      </div>
+      <button class="buildBtn" id="addClientBtn">+ Add Client</button>
+    </div>
+
+    <div class="reminder-strip" id="reminderStrip"></div>
+
+    <div class="client-grid" id="clientGrid"></div>
+    <div class="empty" id="clientEmpty" style="display:none;">No clients yet — add your first one to start tracking report deadlines.</div>
+  </div>
+</div>
+
+<!-- Add / Edit Client -->
+<div class="overlay" id="clientFormOverlay">
+  <div class="modal">
+    <button class="close" id="closeClientForm">✕</button>
+    <div class="modal-eyebrow">Client Record</div>
+    <h2 id="clientFormTitle">Add Client</h2>
+    <div class="form-grid" style="margin-top:20px;">
+      <div class="field">
+        <label>Client / contact name</label>
+        <input type="text" id="cfName" placeholder="e.g. Hussein Rafaat">
+      </div>
+      <div class="field">
+        <label>Company</label>
+        <input type="text" id="cfCompany" placeholder="e.g. Orange Egypt">
+      </div>
+      <div class="field">
+        <label>Vertical</label>
+        <select id="cfVertical">
+          <option value="marketing">Marketing</option>
+          <option value="technology">Technology</option>
+          <option value="branding">Branding</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Role being filled</label>
+        <input type="text" id="cfRole" placeholder="e.g. Senior Backend Developer">
+      </div>
+      <div class="field">
+        <label>Next report due</label>
+        <input type="date" id="cfDue">
+      </div>
+      <div class="field">
+        <label>Reminder cadence</label>
+        <select id="cfCadence">
+          <option value="7">Weekly</option>
+          <option value="14">Bi-weekly</option>
+          <option value="30">Monthly</option>
+          <option value="0">One-off</option>
+        </select>
+      </div>
+    </div>
+    <button class="sourceBtn" id="saveClientBtn" style="margin-top:20px;">Save Client</button>
+  </div>
+</div>
+
+<!-- Client Detail / Activity Log / Report -->
+<div class="overlay" id="clientDetailOverlay">
+  <div class="modal" style="max-width:760px;">
+    <button class="close" id="closeClientDetail">✕</button>
+    <div id="clientDetailBody"></div>
+  </div>
+</div>
+
+<div class="view" id="contentView">
+  <div class="sourcing-wrap">
+    <div class="sourcing-panel">
+      <h2>Content Creator</h2>
+      <p>Tell it what happened or what you need to say — one line is enough — and it writes the post. Structured to how LinkedIn's 2026 feed actually rewards content: a hook in the first two lines, short paragraphs, a real CTA, and 3–5 hashtags (never more).</p>
+
+      <div class="form-grid" style="margin-top:20px;">
+        <div class="field">
+          <label>What are you posting about?</label>
+          <input type="text" id="ccTopic" placeholder="e.g. we just placed a Senior Backend Developer with a fintech client">
+        </div>
+        <div class="field">
+          <label>Content type</label>
+          <select id="ccType">
+            <option value="placement">Placement / win announcement</option>
+            <option value="jobpost">Job opening announcement</option>
+            <option value="outreach">Candidate outreach DM</option>
+            <option value="insight">Market insight / thought leadership</option>
+            <option value="roundup">Weekly "we're hiring" roundup</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Vertical</label>
+          <select id="ccVertical">
+            <option value="marketing">Marketing</option>
+            <option value="technology">Technology</option>
+            <option value="branding">Branding</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tone</label>
+          <select id="ccTone">
+            <option value="professional">Professional</option>
+            <option value="bold">Bold / confident</option>
+            <option value="friendly">Friendly / personal</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Length</label>
+          <select id="ccLength">
+            <option value="short">Short — quick hit, ~50–70 words</option>
+            <option value="medium" selected>Medium — standard post, ~120–160 words</option>
+            <option value="long">Long — storytelling, ~220–300 words</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Platform</label>
+          <select id="ccPlatform">
+            <option value="linkedin">LinkedIn</option>
+            <option value="facebook">Facebook</option>
+            <option value="instagram">Instagram caption</option>
+          </select>
+        </div>
+        <div class="field full">
+          <label>Post format</label>
+          <select id="ccFormat">
+            <option value="text">Text post</option>
+            <option value="image">Image + caption</option>
+            <option value="carousel">Carousel (multi-slide)</option>
+            <option value="video">Short video script</option>
+            <option value="poll">Poll</option>
+          </select>
+          <small>Changes the structure of what's generated — a carousel gets slide breaks, a video gets a timed script, etc.</small>
+        </div>
+      </div>
+
+      <button class="buildBtn" id="ccGenerateBtn">Generate post</button>
+
+      <div class="output-block" id="ccOutputBlock">
+        <div class="platform-tips" id="platformTips"></div>
+        <div class="post-preview-wrap" id="postPreviewWrap"></div>
+        <div class="output-row">
+          <div class="oh"><h4 id="ccOutHeading">LinkedIn post</h4>
+            <div class="output-actions">
+              <button class="mini-btn" id="ccRegenBtn">↻ Regenerate</button>
+              <button class="mini-btn" data-copy="ccOut">Copy</button>
+            </div>
+          </div>
+          <div class="code-box" id="ccOut" style="font-family:'Inter'; white-space:pre-wrap;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sourcing-panel" style="margin-top:16px;">
+      <h2>Why it's written this way</h2>
+      <p>Baked into every generated post — not something you have to remember:</p>
+      <div class="algo-tips">
+        <div class="algo-tip"><b>Hook first.</b> LinkedIn shows ~2 lines before "see more" — the whole first sentence has to earn the click.</div>
+        <div class="algo-tip"><b>Dwell time over links.</b> Native text/carousel posts get pushed harder than posts with an outbound link in the body — put links in the first comment instead.</div>
+        <div class="algo-tip"><b>3–5 hashtags, not 15.</b> Over-tagging reads as spam to the ranking model and to people.</div>
+        <div class="algo-tip"><b>Ask one real question.</b> Comments in the first hour matter more than likes — end with something people can actually answer.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="competitorsView">
+  <div class="sourcing-wrap">
+    <div class="clients-head">
+      <div>
+        <h2>Competitor Intelligence</h2>
+        <p>Who else is selling talent-acquisition-as-a-service into Egypt and the wider Middle East, what they lead with, and where NovaCore can differentiate.</p>
+      </div>
+    </div>
+    <div class="comp-grid" id="compGrid"></div>
+  </div>
+</div>
+
+<div class="view" id="cvView">
+  <div class="sourcing-wrap">
+    <div class="sourcing-panel">
+      <h2>CV Analysis</h2>
+      <p>Paste a candidate's CV text below (copy from the PDF/Word file), pick the role you're screening against, and get a full breakdown with a score — before you spend time on a manual read.</p>
+
+      <div class="form-grid" style="margin-top:20px;">
+        <div class="field full">
+          <label>Paste CV text</label>
+          <textarea id="cvText" rows="10" placeholder="Paste the full CV text here — contact info, summary, experience, education, skills…" style="width:100%; padding:13px; border:1px solid var(--line); border-radius:8px; font-family:'Inter'; font-size:0.88rem; resize:vertical;"></textarea>
+          <small>Works best with pasted text. Scanned/image-only PDFs won't have selectable text to paste.</small>
+        </div>
+        <div class="field">
+          <label>Screening against</label>
+          <select id="cvVertical">
+            <option value="marketing">Marketing</option>
+            <option value="technology">Technology</option>
+            <option value="branding">Branding</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Specific role (optional)</label>
+          <select id="cvRole"><option value="">Any role in this vertical</option></select>
+        </div>
+      </div>
+
+      <button class="buildBtn" id="cvAnalyzeBtn">Analyze CV</button>
+
+      <div id="cvResults" class="cv-results" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="view" id="templateView">
+  <div class="sourcing-wrap">
+    <div class="sourcing-panel">
+      <h2>Template Writer</h2>
+      <p>Write your notes in plain, rough language — bullet points, half-sentences, whatever. Get back a clean, formal, text-only template: no images, no emojis, no casual phrasing. Good for client emails, proposals, formal JDs, or internal memos.</p>
+
+      <div class="form-grid" style="margin-top:20px;">
+        <div class="field full">
+          <label>Your notes</label>
+          <textarea id="tplNotes" rows="8" placeholder="e.g. need to tell the client the search is taking longer bc the role is niche, we have 2 candidates lined up for next week, budget might need to go up 10%" style="width:100%; padding:13px; border:1px solid var(--line); border-radius:8px; font-family:'Inter'; font-size:0.88rem; resize:vertical;"></textarea>
+        </div>
+        <div class="field">
+          <label>Document type</label>
+          <select id="tplType">
+            <option value="memo">Internal memo</option>
+            <option value="client">Formal client update</option>
+            <option value="proposal">Proposal / offer summary</option>
+            <option value="jd">Formal job description</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Recipient</label>
+          <input type="text" id="tplRecipient" placeholder="e.g. Hussein Rafaat, Orange Egypt">
+        </div>
+      </div>
+
+      <button class="buildBtn" id="tplGenerateBtn">Generate formal template</button>
+
+      <div class="output-block" id="tplOutputBlock">
+        <div class="output-row">
+          <div class="oh"><h4>Formal template — text only</h4>
+            <div class="output-actions">
+              <button class="mini-btn" data-copy="tplOut">Copy</button>
+              <button class="mini-btn" id="tplDownloadBtn">Download .txt</button>
+            </div>
+          </div>
+          <div class="code-box" id="tplOut" style="font-family:'Inter'; white-space:pre-wrap;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="auto-note">
+  <div class="icon">AUTO</div>
+  <div>
+    <h4>How the daily refresh actually works</h4>
+    <p>This page timestamps itself on every load — but for the JD library and news feed to truly rewrite themselves each day without you touching the site, they need a scheduled job on the backend (a GitHub Action, same as your Apps Script pattern, running on a daily cron) that regenerates <code>jobs.json</code> and <code>news.json</code> and commits them to the repo. Say the word and I'll wire that up on top of your existing GitHub Pages + Apps Script setup so it runs unattended every morning.</p>
+  </div>
+</div>
+
+<section class="news">
+  <div class="news-head">
+    <div>
+      <h2>Market pulse — Marketing, Tech &amp; Branding</h2>
+      <p>What's actually moving hiring demand across Egypt and the wider Middle East right now.</p>
+    </div>
+    <span class="count" id="newsDate"></span>
+  </div>
+  <div class="news-grid" id="newsGrid"></div>
+</section>
+
+<footer>
+  <span>© NovaCore — Talent Acquisition as a Service</span>
+  <span>Role Intelligence Dashboard v1.0</span>
+</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="close" id="closeModal">✕</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ================= JOB DATA ================= */
+const JOBS = {
+  marketing: [
+    {title:"Social Media Specialist", level:"Entry",
+      desc:"Owns day-to-day content and community management across the brand's social channels, turning a content calendar into consistent daily posting and engagement.",
+      resp:["Plan and publish a weekly content calendar across Instagram, TikTok, LinkedIn and Facebook","Monitor comments, DMs and mentions, replying within brand voice guidelines","Track basic engagement metrics and flag top-performing formats","Coordinate with designers and videographers on asset requests","Stay current on platform features and short-form content trends"],
+      req:["0–2 years managing brand or personal social accounts","Comfortable with Meta Business Suite, TikTok Business, and scheduling tools","Strong written Arabic and English","Eye for what makes a post stop the scroll"],
+      analysis:{demand:"High", salary:"EGP 7,000 – 14,000 / month", difficulty:"Easy", outlook:"Growing", skills:["Content Calendar","Meta Business Suite","TikTok","Community Management","Copywriting"]}},
+    {title:"Performance Marketing Specialist", level:"Mid",
+      desc:"Runs paid acquisition across Meta, Google and TikTok Ads, owning budget allocation and constantly testing toward a lower cost-per-result.",
+      resp:["Build, launch and optimize paid campaigns across Meta, Google and TikTok Ads","Manage monthly ad budgets and reallocate spend toward best-performing channels","Run structured A/B tests on creative, audience and placement","Report on CAC, ROAS and funnel conversion weekly to stakeholders","Work with creative team to brief high-performing ad concepts"],
+      req:["2–4 years running paid campaigns with a demonstrable budget under management","Fluent in Meta Ads Manager, Google Ads and GA4","Comfortable reading a spreadsheet model of CAC vs LTV","Certifications in Google Ads/Meta Blueprint a plus"],
+      analysis:{demand:"High", salary:"EGP 15,000 – 30,000 / month", difficulty:"Moderate", outlook:"Growing", skills:["Meta Ads Manager","Google Ads","GA4","ROAS","A/B Testing"]}},
+    {title:"SEO Specialist", level:"Mid",
+      desc:"Improves organic visibility through technical, on-page and content-driven SEO, working closely with content and dev teams.",
+      resp:["Run technical SEO audits and prioritize fixes with the dev team","Own keyword strategy and content briefs for target search terms","Track rankings, organic traffic and search visibility monthly","Build and maintain a backlink outreach pipeline","Monitor algorithm updates and adjust strategy accordingly"],
+      req:["2–4 years hands-on SEO experience with visible ranking results","Working knowledge of Screaming Frog, Ahrefs/SEMrush, and Search Console","Understanding of Core Web Vitals and technical SEO fundamentals","Clear, structured written English for content briefs"],
+      analysis:{demand:"Medium", salary:"EGP 13,000 – 26,000 / month", difficulty:"Moderate", outlook:"Stable", skills:["SEMrush","Ahrefs","Google Search Console","Technical SEO","Keyword Research"]}},
+    {title:"Content Marketing Manager", level:"Senior",
+      desc:"Owns the content strategy end to end — from editorial calendar to distribution — turning brand expertise into content that drives pipeline.",
+      resp:["Set and own the quarterly content strategy and editorial calendar","Manage a team of writers, designers and freelancers","Align content themes with sales and product priorities","Track content performance against pipeline and awareness goals","Establish brand voice and editorial standards across all channels"],
+      req:["4–7 years in content marketing with at least one team-management cycle","Portfolio of content that shipped and moved a measurable metric","Strong editorial judgment and stakeholder management skills","Experience briefing designers, videographers and freelancers"],
+      analysis:{demand:"Medium", salary:"EGP 25,000 – 45,000 / month", difficulty:"Moderate", outlook:"Stable", skills:["Content Strategy","Editorial Calendar","Team Leadership","Storytelling","Analytics"]}},
+    {title:"CRM & Lifecycle Marketing Manager", level:"Senior",
+      desc:"Designs and runs the email, SMS and push lifecycle that moves users from signup to retention, owning segmentation and automation flows.",
+      resp:["Design and maintain lifecycle flows: onboarding, retention, win-back","Segment the user base and personalize messaging by behavior","Own CRM platform administration and deliverability health","A/B test subject lines, send times and content blocks","Report on open, click, conversion and retention lift by flow"],
+      req:["4–6 years in CRM/lifecycle marketing with a named platform (Klaviyo, Braze, HubSpot etc.)","Comfortable with basic SQL or a BI tool for segment building","Strong grasp of retention and cohort metrics","Copywriting skill for high-converting subject lines and CTAs"],
+      analysis:{demand:"Medium", salary:"EGP 22,000 – 40,000 / month", difficulty:"Hard", outlook:"Growing", skills:["Klaviyo","Braze","HubSpot","SQL","Segmentation"]}},
+    {title:"Marketing Director", level:"Leadership",
+      desc:"Sets marketing strategy and owns the P&L for the function, building the team and the roadmap that gets the brand to its growth targets.",
+      resp:["Set annual marketing strategy, budget and OKRs aligned to business goals","Build and lead a multi-discipline marketing team (brand, performance, content)","Own marketing's contribution to pipeline and revenue targets","Represent marketing at the leadership table and report to founders/board","Evaluate and select agency and technology partners"],
+      req:["8+ years in marketing with 3+ years leading a team","Track record owning a marketing budget and being accountable for ROI","Comfortable presenting strategy and results to executive leadership","Experience across both brand-building and performance disciplines"],
+      analysis:{demand:"Low", salary:"EGP 55,000 – 100,000+ / month", difficulty:"Hard", outlook:"Stable", skills:["Marketing Strategy","P&L Ownership","Team Leadership","Board Reporting","Brand + Performance"]}}
+  ],
+  technology: [
+    {title:"QA Engineer", level:"Entry",
+      desc:"Protects product quality by designing test cases, running manual and automated tests, and catching issues before they reach users.",
+      resp:["Write and execute manual test cases against product requirements","Log, triage and track bugs through to resolution","Build and maintain automated regression test scripts","Participate in sprint planning to flag testability concerns early","Verify fixes and sign off releases before deployment"],
+      req:["0–2 years in QA or a strong QA-focused internship","Familiarity with a test framework (Selenium, Cypress, or similar)","Understanding of the bug lifecycle and basic SQL for data checks","Detail-oriented mindset and clear bug-report writing"],
+      analysis:{demand:"Medium", salary:"EGP 9,000 – 18,000 / month", difficulty:"Easy", outlook:"Stable", skills:["Selenium","Cypress","Test Cases","SQL","Bug Tracking"]}},
+    {title:"Frontend Developer", level:"Mid",
+      desc:"Builds the interfaces users actually touch, translating designs into responsive, performant, accessible product screens.",
+      resp:["Build and maintain UI components in React (or the team's framework)","Translate Figma designs into pixel-accurate, responsive interfaces","Optimize for performance, accessibility and cross-browser support","Collaborate with backend engineers on API contracts","Write unit and integration tests for critical UI flows"],
+      req:["2–4 years building production web interfaces","Strong JavaScript/TypeScript, React or Vue, and modern CSS","Experience with a component library and state management tool","Eye for design detail and comfort working from Figma"],
+      analysis:{demand:"High", salary:"EGP 20,000 – 40,000 / month", difficulty:"Moderate", outlook:"Growing", skills:["React","TypeScript","JavaScript","CSS","Figma"]}},
+    {title:"Backend Developer", level:"Mid",
+      desc:"Designs and builds the services and APIs that power the product, balancing correctness, performance and maintainability.",
+      resp:["Design, build and maintain RESTful or GraphQL APIs","Model and optimize database schemas for performance and integrity","Write automated tests and participate in code review","Debug production issues and contribute to on-call rotation","Document services and contribute to architecture decisions"],
+      req:["2–5 years backend experience in Node.js, Python, Java or Go","Solid grasp of relational and/or NoSQL database design","Experience with Git-based workflows and CI/CD pipelines","Understanding of API security fundamentals"],
+      analysis:{demand:"High", salary:"EGP 22,000 – 42,000 / month", difficulty:"Hard", outlook:"Growing", skills:["Node.js","Python","REST API","PostgreSQL","CI/CD"]}},
+    {title:"DevOps Engineer", level:"Senior",
+      desc:"Owns the infrastructure, deployment pipelines and reliability of the systems engineering builds on top of.",
+      resp:["Design and maintain CI/CD pipelines across environments","Manage cloud infrastructure as code (Terraform/CloudFormation)","Own monitoring, alerting and incident response processes","Optimize infrastructure cost and performance","Harden systems against security and reliability risks"],
+      req:["4–7 years in DevOps/SRE with a major cloud provider (AWS/Azure/GCP)","Proficiency with Docker, Kubernetes and IaC tooling","Scripting ability in Python or Bash for automation","Experience owning production incident response"],
+      analysis:{demand:"High", salary:"EGP 40,000 – 70,000 / month", difficulty:"Hard", outlook:"Growing", skills:["AWS","Kubernetes","Terraform","Docker","CI/CD"]}},
+    {title:"Data Analyst", level:"Mid",
+      desc:"Turns raw product and business data into decisions, building dashboards and running the analysis that answers 'why'.",
+      resp:["Build and maintain dashboards for key business metrics","Run ad hoc analysis to answer stakeholder questions","Write and optimize SQL queries against production data warehouses","Partner with product and growth teams on experiment analysis","Ensure data quality and flag anomalies proactively"],
+      req:["2–4 years in a data or analytics role","Strong SQL and experience with a BI tool (Looker, Power BI, Tableau)","Working knowledge of Python or R for deeper analysis","Ability to translate numbers into a clear business narrative"],
+      analysis:{demand:"Medium", salary:"EGP 16,000 – 32,000 / month", difficulty:"Moderate", outlook:"Growing", skills:["SQL","Power BI","Tableau","Python","Excel"]}},
+    {title:"Product Manager", level:"Senior",
+      desc:"Owns the product roadmap for a domain, translating user and business needs into a prioritized backlog engineering can execute against.",
+      resp:["Define and prioritize the product roadmap for a domain","Write clear specs and acceptance criteria for engineering","Run discovery: user interviews, data analysis, competitive research","Align stakeholders across engineering, design and business","Own product metrics and post-launch iteration"],
+      req:["4–7 years in product management with shipped, measurable features","Comfortable reading data (SQL/analytics tools) to inform decisions","Strong written communication for specs and stakeholder updates","Experience working directly with engineering and design teams"],
+      analysis:{demand:"Medium", salary:"EGP 38,000 – 60,000 / month", difficulty:"Hard", outlook:"Growing", skills:["Product Roadmap","User Research","SQL","Stakeholder Management","Agile"]}},
+    {title:"Engineering Manager", level:"Leadership",
+      desc:"Leads a team of engineers, owning delivery, technical quality and the growth of the people on the team.",
+      resp:["Manage and grow a team of 5–10 engineers","Own sprint planning, delivery predictability and technical quality","Run 1:1s, performance reviews and career development plans","Partner with product on scoping and technical trade-offs","Contribute to architecture and technical strategy decisions"],
+      req:["6+ years engineering experience including 2+ years managing a team","Track record shipping production systems at scale","Strong communication across engineering and business stakeholders","Comfortable balancing hands-on technical judgment with people leadership"],
+      analysis:{demand:"Low", salary:"EGP 55,000 – 95,000+ / month", difficulty:"Hard", outlook:"Stable", skills:["Team Leadership","System Architecture","Agile","Hiring","Performance Management"]}}
+  ],
+  branding: [
+    {title:"Employer Branding Specialist", level:"Entry",
+      desc:"Shapes how candidates experience the company before they ever apply, from careers page copy to social proof content.",
+      resp:["Maintain and refresh the careers page and job-post templates","Produce employee-spotlight and culture content for social channels","Support recruiters with branded outreach templates and collateral","Track employer-brand metrics: application rate, glassdoor sentiment, offer-accept rate","Coordinate employee testimonials and behind-the-scenes content"],
+      req:["0–2 years in employer branding, HR marketing or content","Strong writing skills in English (Arabic a plus)","Comfortable with Canva/basic design tools for quick assets","Genuine interest in company culture and people stories"],
+      analysis:{demand:"Medium", salary:"EGP 8,000 – 16,000 / month", difficulty:"Easy", outlook:"Growing", skills:["Employer Branding","Content Writing","Canva","Glassdoor Management","Storytelling"]}},
+    {title:"Brand Designer", level:"Mid",
+      desc:"Translates brand strategy into visual assets — from social templates to pitch decks — keeping every touchpoint on-brand.",
+      resp:["Design on-brand assets across social, web, and sales collateral","Maintain and evolve the brand's visual guideline library","Partner with marketing on campaign-specific visual concepts","Prepare export-ready files across formats and platforms","Ensure visual consistency across every external touchpoint"],
+      req:["2–4 years in brand or graphic design with a strong portfolio","Expert in Figma/Adobe Creative Suite","Understanding of typography, color theory and grid systems","Ability to work within (and evolve) an existing brand system"],
+      analysis:{demand:"Medium", salary:"EGP 14,000 – 28,000 / month", difficulty:"Moderate", outlook:"Stable", skills:["Figma","Adobe Illustrator","Adobe Photoshop","Brand Guidelines","Typography"]}},
+    {title:"Brand Strategist", level:"Senior",
+      desc:"Defines who the brand is and how it shows up — positioning, voice, and narrative — and translates that into a system others can execute against.",
+      resp:["Develop brand positioning, messaging architecture and tone of voice","Lead brand workshops with leadership and cross-functional teams","Translate strategy into a practical brand guideline system","Audit brand consistency across all customer touchpoints","Brief and oversee creative and content teams on brand execution"],
+      req:["4–7 years in brand strategy at an agency or in-house team","Portfolio showing positioning work that shipped and was adopted","Strong facilitation skills for leadership workshops","Excellent written and verbal storytelling ability"],
+      analysis:{demand:"Low", salary:"EGP 28,000 – 48,000 / month", difficulty:"Hard", outlook:"Stable", skills:["Brand Positioning","Messaging Architecture","Workshop Facilitation","Storytelling","Brand Audits"]}},
+    {title:"Creative Director", level:"Leadership",
+      desc:"Owns the creative vision across every brand output, setting the bar for what 'on-brand and excellent' looks like and leading the team that delivers it.",
+      resp:["Set creative direction across brand, campaign and product marketing","Lead and mentor a team of designers, writers and creatives","Present creative concepts to leadership and clients with a clear rationale","Own quality control across every external creative output","Evolve the brand identity as the company and market shift"],
+      req:["7+ years in creative leadership at an agency or in-house team","Portfolio demonstrating range across brand, campaign and digital","Strong presentation skills for leadership and client settings","Experience managing and developing a creative team"],
+      analysis:{demand:"Low", salary:"EGP 48,000 – 85,000+ / month", difficulty:"Hard", outlook:"Stable", skills:["Creative Direction","Team Leadership","Client Presentation","Brand Identity","Campaign Strategy"]}}
+  ]
+};
+
+/* ================= NEWS DATA ================= */
+const NEWS = [
+  {vertical:"technology", title:"Egypt's ICT export engine keeps growing", body:"Egypt's tech services exports climbed to roughly $4.8B in 2025, spanning IT services, BPO and engineering R&D — reinforcing sustained demand for software, cloud and data talent, most of it requiring solid English.", src:"9cv9 Recruitment Agency — Egypt Recruitment Trends 2026", link:"https://9cv9recruitment.agency/103-recruitment-in-egypt-statistics-data-trends-for-2026/"},
+  {vertical:"technology", title:"5G rollout removes a remote-work bottleneck", body:"Nationwide 5G landed in June 2025 backed by a $2.7B infrastructure push, easing bandwidth constraints for distributed teams and pushing Egypt further into the global remote-work talent pool.", src:"9cv9 Recruitment Agency — Egypt Recruitment Trends 2026", link:"https://9cv9recruitment.agency/103-recruitment-in-egypt-statistics-data-trends-for-2026/"},
+  {vertical:"marketing", title:"Social still anchors Egypt's digital marketing hiring", body:"Social Media Specialist, Performance Marketing Specialist, SEO Specialist and Content Writer remain the most-requested digital marketing roles in Egypt for 2026, with employers increasingly pairing creative skill with analytical, paid-media fluency.", src:"WUZZUF Careers — Digital Marketing Jobs in Egypt 2026", link:"https://wuzzuf.net/careers/digital-marketing-jobs-in-egypt/"},
+  {vertical:"marketing", title:"Growth-titled roles are multiplying across the Gulf", body:"Postings across the Middle East are shifting toward blended 'Marketing & Growth' titles that expect A/B testing literacy and campaign analytics alongside classic brand-building skills.", src:"Bayt.com — Marketing Jobs in the Middle East, Jul 2026", link:"https://www.bayt.com/en/international/jobs/marketing-jobs/"},
+  {vertical:"technology", title:"AI and cloud skills top Egypt's in-demand list", body:"Alongside renewable energy and fintech, digital marketing and e-commerce, software development, AI and cloud computing continue to top Egypt's most in-demand skill categories for 2026 employers.", src:"Edstellar — Top 10 In-Demand Skills in Egypt for 2026", link:"https://www.edstellar.com/blog/skills-in-demand-in-egypt"},
+  {vertical:"branding", title:"Diversification across the Gulf is widening brand and marketing roles", body:"As GCC economies diversify beyond oil and gas into tech, tourism and manufacturing, employer branding and consumer-brand roles are expanding into sectors that historically had no dedicated brand function.", src:"Leira Consulting — High-Demand Jobs in the Middle East 2026", link:"https://www.leiraconsulting.com/post/high-demand-jobs-middle-east"},
+  {vertical:"technology", title:"Most 'average salary' pages for Egypt are stale — worth knowing before you quote a client", body:"A number of widely-cited salary aggregators still show pre-2024-float figures or mislabel annual pay as monthly, understating today's real Egyptian tech market by roughly 50–100% — a useful sanity check before benchmarking an offer.", src:"CV Pro Maker — Tech & Developer Salaries in Egypt 2026", link:"https://www.cvpromaker.com/salaries/egypt"}
+];
+
+/* ================= STATE ================= */
+let currentVertical = "marketing";
+let currentLevel = "all";
+let searchTerm = "";
+
+const grid = document.getElementById('jobGrid');
+const emptyState = document.getElementById('emptyState');
+const resultCount = document.getElementById('resultCount');
+
+function render(){
+  const jobs = JOBS[currentVertical].filter(j=>{
+    const matchLevel = currentLevel==="all" || j.level===currentLevel;
+    const matchSearch = j.title.toLowerCase().includes(searchTerm) || j.desc.toLowerCase().includes(searchTerm);
+    return matchLevel && matchSearch;
+  });
+  grid.innerHTML = "";
+  jobs.forEach(j=>{
+    const card = document.createElement('div');
+    card.className = "card";
+    card.dataset.v = currentVertical;
+    card.innerHTML = `
+      <div class="eyebrow">${currentVertical}</div>
+      <h3>${j.title}</h3>
+      <p class="desc">${j.desc}</p>
+      <div class="meta"><span class="tag">${j.level}</span></div>
+    `;
+    card.addEventListener('click', ()=>openModal(j));
+    grid.appendChild(card);
+  });
+  emptyState.style.display = jobs.length ? "none" : "block";
+  resultCount.textContent = `${jobs.length} role${jobs.length!==1?'s':''}`;
+}
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    currentVertical = tab.dataset.v;
+    render();
+  });
+});
+
+document.querySelectorAll('#levelFilter .chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    document.querySelectorAll('#levelFilter .chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    currentLevel = chip.dataset.level;
+    render();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  searchTerm = e.target.value.toLowerCase();
+  render();
+});
+
+/* ================= MODAL ================= */
+const overlay = document.getElementById('overlay');
+const modalBody = document.getElementById('modalBody');
+
+function openModal(j){
+  modalBody.innerHTML = `
+    <div class="modal-eyebrow">${currentVertical} · ${j.level}</div>
+    <h2>${j.title}</h2>
+    <p class="subline">${j.desc}</p>
+    <div class="modal-section">
+      <h4>Key Responsibilities</h4>
+      <ul>${j.resp.map(r=>`<li>${r}</li>`).join('')}</ul>
+    </div>
+    <div class="modal-section">
+      <h4>Requirements</h4>
+      <ul>${j.req.map(r=>`<li>${r}</li>`).join('')}</ul>
+    </div>
+    <div class="modal-section">
+      <h4>Job Analysis</h4>
+      <p style="font-size:0.78rem; color:var(--slate); margin-bottom:14px;">Benchmarked across Glassdoor, SalaryExpert, Payscale and Paylab listings for Egypt. Public salary aggregators disagree wildly here — several still carry pre-2024 pre-float figures — so treat this as a directional band to sanity-check offers, not a quote.</p>
+      <div class="analysis-grid">
+        <div class="astat"><span class="al">Demand</span><span class="av demand-${j.analysis.demand}">${j.analysis.demand}</span></div>
+        <div class="astat"><span class="al">Salary band</span><span class="av">${j.analysis.salary}</span></div>
+        <div class="astat"><span class="al">Hiring difficulty</span><span class="av">${j.analysis.difficulty}</span></div>
+        <div class="astat"><span class="al">Outlook</span><span class="av">${j.analysis.outlook}</span></div>
+      </div>
+      <div class="skill-tags">${j.analysis.skills.map(s=>`<span class="skilltag">${s}</span>`).join('')}</div>
+    </div>
+    <div class="modal-section">
+      <h4>Live on the Market Right Now</h4>
+      <div class="live-links" id="liveLinks"></div>
+    </div>
+    <div class="modal-section">
+      <button class="sourceBtn" id="sourceFromJob">Build sourcing search for this role →</button>
+    </div>
+  `;
+  renderLiveLinks(j.title, currentVertical);
+  document.getElementById('sourceFromJob').addEventListener('click', ()=>{
+    overlay.classList.remove('open');
+    goToSourcing(j.title, j.analysis.skills);
+  });
+  overlay.classList.add('open');
+}
+document.getElementById('closeModal').addEventListener('click', ()=>overlay.classList.remove('open'));
+overlay.addEventListener('click', (e)=>{ if(e.target===overlay) overlay.classList.remove('open'); });
+
+/* ================= LIVE MARKET LINKS (LinkedIn / Wuzzuf / Bayt / Communities) ================= */
+const COMMUNITY_HASHTAG = {
+  marketing: "digitalmarketingegypt",
+  technology: "techegypt",
+  branding: "brandingmena"
+};
+function renderLiveLinks(title, vertical){
+  const q = encodeURIComponent(title);
+  const liJobs = `https://www.linkedin.com/jobs/search/?keywords=${q}&location=Egypt`;
+  const liPeople = `https://www.linkedin.com/search/results/people/?keywords=${q}&location=Egypt`;
+  const wzJobs = `https://wuzzuf.net/search/jobs/?q=${q}&a=hpb`;
+  const btJobs = `https://www.bayt.com/en/egypt/jobs/?q=${q}`;
+  const hashtag = COMMUNITY_HASHTAG[vertical] || "hiringegypt";
+  const liCommunity = `https://www.linkedin.com/feed/hashtag/?keywords=${hashtag}`;
+
+  document.getElementById('liveLinks').innerHTML = `
+    <a class="live-pill li" href="${liJobs}" target="_blank" rel="noopener">🔗 LinkedIn Jobs</a>
+    <a class="live-pill li" href="${liPeople}" target="_blank" rel="noopener">🔗 LinkedIn People Search</a>
+    <a class="live-pill wz" href="${wzJobs}" target="_blank" rel="noopener">🔗 Wuzzuf Jobs</a>
+    <a class="live-pill bt" href="${btJobs}" target="_blank" rel="noopener">🔗 Bayt Jobs</a>
+    <a class="live-pill co" href="${liCommunity}" target="_blank" rel="noopener">🔗 #${hashtag} community</a>
+  `;
+}
+
+/* ================= NEWS RENDER ================= */
+const newsGrid = document.getElementById('newsGrid');
+NEWS.forEach(n=>{
+  const card = document.createElement('div');
+  card.className = "news-card";
+  card.innerHTML = `
+    <span class="tag">${n.vertical}</span>
+    <h3><a href="${n.link}" target="_blank" rel="noopener">${n.title}</a></h3>
+    <p>${n.body}</p>
+    <div class="src">${n.src} · <a href="${n.link}" target="_blank" rel="noopener" style="color:inherit;">Read source →</a></div>
+  `;
+  newsGrid.appendChild(card);
+});
+
+/* ================= PRIMARY NAV (Library / Sourcing) ================= */
+document.querySelectorAll('.pnav-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.pnav-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('libraryView').classList.toggle('active', btn.dataset.view==='library');
+    document.getElementById('sourcingView').classList.toggle('active', btn.dataset.view==='sourcing');
+    document.getElementById('clientsView').classList.toggle('active', btn.dataset.view==='clients');
+    document.getElementById('contentView').classList.toggle('active', btn.dataset.view==='content');
+    document.getElementById('competitorsView').classList.toggle('active', btn.dataset.view==='competitors');
+    document.getElementById('cvView').classList.toggle('active', btn.dataset.view==='cv');
+    document.getElementById('templateView').classList.toggle('active', btn.dataset.view==='template');
+    if(btn.dataset.view==='clients') renderClients();
+  });
+});
+
+function switchToPrimary(view){
+  document.querySelectorAll('.pnav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  document.getElementById('libraryView').classList.toggle('active', view==='library');
+  document.getElementById('sourcingView').classList.toggle('active', view==='sourcing');
+  document.getElementById('clientsView').classList.toggle('active', view==='clients');
+  document.getElementById('contentView').classList.toggle('active', view==='content');
+  document.getElementById('competitorsView').classList.toggle('active', view==='competitors');
+  document.getElementById('cvView').classList.toggle('active', view==='cv');
+  document.getElementById('templateView').classList.toggle('active', view==='template');
+  if(view==='clients') renderClients();
+}
+
+/* ================= SOURCING PRESETS ================= */
+const presetRow = document.getElementById('presetRow');
+const ALL_ROLES = [...JOBS.marketing, ...JOBS.technology, ...JOBS.branding];
+// one representative preset per vertical, plus a couple of high-volume roles
+const PRESET_PICKS = ["Performance Marketing Specialist","Frontend Developer","Backend Developer","Brand Designer","SEO Specialist","Employer Branding Specialist"];
+PRESET_PICKS.forEach(title=>{
+  const job = ALL_ROLES.find(j=>j.title===title);
+  if(!job) return;
+  const chip = document.createElement('button');
+  chip.className = "preset-chip";
+  chip.textContent = title;
+  chip.addEventListener('click', ()=>fillSourcing(title, job.analysis.skills));
+  presetRow.appendChild(chip);
+});
+
+function fillSourcing(title, skills){
+  document.getElementById('srcTitles').value = title;
+  document.getElementById('srcSkills').value = skills.slice(0,4).join(", ");
+  buildStrings();
+}
+
+function goToSourcing(title, skills){
+  switchToPrimary('sourcing');
+  fillSourcing(title, skills);
+  document.getElementById('sourcingView').scrollIntoView({behavior:'smooth'});
+}
+
+/* ================= BOOLEAN / X-RAY BUILDER ================= */
+function orGroup(str){
+  const parts = str.split(',').map(s=>s.trim()).filter(Boolean);
+  if(parts.length===0) return "";
+  if(parts.length===1) return `"${parts[0]}"`;
+  return "(" + parts.map(p=>`"${p}"`).join(" OR ") + ")";
+}
+function andSkills(str){
+  const parts = str.split(',').map(s=>s.trim()).filter(Boolean);
+  return parts.map(p=>`"${p}"`).join(" AND ");
+}
+function excludeGroup(str){
+  const parts = str.split(',').map(s=>s.trim()).filter(Boolean);
+  return parts.map(p=>`-"${p}"`).join(" ");
+}
+
+function buildStrings(){
+  const titles = document.getElementById('srcTitles').value;
+  const skills = document.getElementById('srcSkills').value;
+  const location = document.getElementById('srcLocation').value;
+  const exclude = document.getElementById('srcExclude').value;
+  const company = document.getElementById('srcCompany').value;
+
+  const titleGroup = orGroup(titles) || '"job title"';
+  const skillGroup = andSkills(skills);
+  const excl = excludeGroup(exclude);
+  const loc = location.trim();
+
+  // Boolean string (for LinkedIn Recruiter / ATS boolean field)
+  let boolStr = titleGroup;
+  if(skillGroup) boolStr += " AND " + skillGroup;
+  if(loc) boolStr += ` AND "${loc}"`;
+  if(excl) boolStr += " " + excl;
+
+  // LinkedIn X-Ray (Google dork against linkedin.com/in)
+  let liStr = `site:linkedin.com/in ${titleGroup}`;
+  if(skillGroup) liStr += " " + skillGroup;
+  if(loc) liStr += ` "${loc}"`;
+  if(company) liStr += ` "${company}"`;
+  if(excl) liStr += " " + excl;
+
+  // General web X-Ray (CVs, portfolios, personal sites)
+  let webStr = `${titleGroup} (CV OR resume OR portfolio)`;
+  if(skillGroup) webStr += " " + skillGroup;
+  if(loc) webStr += ` "${loc}"`;
+  if(excl) webStr += " " + excl;
+
+  document.getElementById('boolOut').textContent = boolStr;
+  document.getElementById('liOut').textContent = liStr;
+  document.getElementById('webOut').textContent = webStr;
+
+  // GitHub X-Ray only shown when the active vertical/tab context is technology
+  const isTech = /developer|engineer|devops|data|product|qa/i.test(titles) || currentVertical === "technology";
+  const ghRow = document.getElementById('ghRow');
+  if(isTech){
+    let ghStr = `site:github.com ${titleGroup}`;
+    if(skillGroup) ghStr += " " + skillGroup;
+    if(loc) ghStr += ` "${loc}"`;
+    document.getElementById('ghOut').textContent = ghStr;
+    ghRow.style.display = "block";
+  } else {
+    ghRow.style.display = "none";
+  }
+
+  document.getElementById('outputBlock').classList.add('show');
+}
+document.getElementById('buildBtn').addEventListener('click', buildStrings);
+
+document.querySelectorAll('.mini-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const key = btn.dataset.copy || btn.dataset.open;
+    const text = document.getElementById(key).textContent;
+    if(btn.dataset.copy){
+      navigator.clipboard.writeText(text).then(()=>{
+        const old = btn.textContent;
+        btn.textContent = "Copied";
+        setTimeout(()=>btn.textContent = old, 1200);
+      });
+    } else if(btn.dataset.open){
+      const isGithub = key === "ghOut";
+      const base = isGithub ? "https://github.com/search?q=" : "https://www.google.com/search?q=";
+      window.open(base + encodeURIComponent(text), "_blank");
+    }
+  });
+});
+
+/* ================= COMMUNITIES GRID ================= */
+const VERTICAL_META = {
+  marketing:{label:"Marketing", color:"var(--mkt)"},
+  technology:{label:"Technology", color:"var(--tech)"},
+  branding:{label:"Branding", color:"var(--brand)"}
+};
+const commGrid = document.getElementById('commGrid');
+Object.keys(VERTICAL_META).forEach(v=>{
+  const meta = VERTICAL_META[v];
+  const hashtag = COMMUNITY_HASHTAG[v];
+  const liJobs = `https://www.linkedin.com/jobs/search/?keywords=${encodeURIComponent(meta.label)}&location=Egypt`;
+  const wzJobs = `https://wuzzuf.net/search/jobs/?q=${encodeURIComponent(meta.label)}&a=hpb`;
+  const btJobs = `https://www.bayt.com/en/egypt/jobs/?q=${encodeURIComponent(meta.label)}`;
+  const liCommunity = `https://www.linkedin.com/feed/hashtag/?keywords=${hashtag}`;
+  const card = document.createElement('div');
+  card.className = "comm-card";
+  card.innerHTML = `
+    <div class="swatch-lbl"><span class="sw" style="background:${meta.color}"></span><span>${meta.label}</span></div>
+    <div class="comm-links">
+      <a href="${liJobs}" target="_blank" rel="noopener">LinkedIn Jobs — ${meta.label} (Egypt) →</a>
+      <a href="${wzJobs}" target="_blank" rel="noopener">Wuzzuf Jobs — ${meta.label} →</a>
+      <a href="${btJobs}" target="_blank" rel="noopener">Bayt Jobs — ${meta.label} →</a>
+      <a href="${liCommunity}" target="_blank" rel="noopener">LinkedIn #${hashtag} community feed →</a>
+    </div>
+  `;
+  commGrid.appendChild(card);
+});
+
+/* ================= CLIENTS & RECRUITMENT REPORTS ================= */
+/*
+  NovaCore Clients backend:
+  - When running inside Google Apps Script, clients are stored in Google Sheets.
+  - When opened locally, the original localStorage behavior is used as a fallback.
+*/
+const CLIENTS_KEY = "novacore_clients_v1";
+const IS_APPS_SCRIPT = typeof google !== "undefined" && google.script && google.script.run;
+
+function localLoadClients(){
+  try{ return JSON.parse(localStorage.getItem(CLIENTS_KEY)) || []; }
+  catch(e){ return []; }
+}
+function localSaveClients(list){
+  localStorage.setItem(CLIENTS_KEY, JSON.stringify(list));
+}
+
+let clients = [];
+let editingClientId = null;
+let activeClientId = null;
+let clientsReady = false;
+
+function loadClientsFromBackend(){
+  if(!IS_APPS_SCRIPT){
+    clients = localLoadClients();
+    clientsReady = true;
+    renderClients();
+    return;
+  }
+  document.getElementById('syncTime').textContent = "LOADING CLIENTS…";
+  google.script.run
+    .withSuccessHandler(list=>{
+      clients = Array.isArray(list) ? list : [];
+      clientsReady = true;
+      document.getElementById('syncTime').textContent = "CLIENTS SYNCED " + formatDate(new Date());
+      renderClients();
+    })
+    .withFailureHandler(err=>{
+      console.error(err);
+      clients = [];
+      clientsReady = true;
+      document.getElementById('syncTime').textContent = "CLIENT SYNC ERROR";
+      alert("Could not load clients from Google Sheets. Check the Apps Script deployment and Sheet ID.");
+      renderClients();
+    })
+    .getClients();
+}
+
+function saveClientsLocalOnly(list){
+  if(!IS_APPS_SCRIPT) localSaveClients(list);
+}
+
+function saveClientToBackend(client, action, onDone){
+  if(!IS_APPS_SCRIPT){
+    localSaveClients(clients);
+    if(onDone) onDone();
+    return;
+  }
+  const runner = google.script.run
+    .withSuccessHandler(result=>{
+      if(result && result.client){
+        const idx = clients.findIndex(x=>x.id===result.client.id);
+        if(idx >= 0) clients[idx] = result.client;
+        else clients.push(result.client);
+      }
+      if(onDone) onDone(result);
+    })
+    .withFailureHandler(err=>{
+      console.error(err);
+      alert("Client was not saved to Google Sheets: " + (err.message || err));
+    });
+
+  if(action === "create") runner.createClient(client);
+  else if(action === "update") runner.updateClient(client);
+}
+
+function addActivityToBackend(clientId, activity, onDone){
+  if(!IS_APPS_SCRIPT){
+    const c = clients.find(x=>x.id===clientId);
+    if(c){
+      c.activities = c.activities || [];
+      c.activities.push(activity);
+      localSaveClients(clients);
+    }
+    if(onDone) onDone();
+    return;
+  }
+  google.script.run
+    .withSuccessHandler(result=>{
+      if(result && result.client){
+        const idx = clients.findIndex(x=>x.id===clientId);
+        if(idx >= 0) clients[idx] = result.client;
+      }
+      if(onDone) onDone(result);
+    })
+    .withFailureHandler(err=>alert("Activity could not be saved: " + (err.message || err)))
+    .addClientActivity(clientId, activity.text, activity.date);
+}
+
+function deleteClientFromBackend(clientId, onDone){
+  if(!IS_APPS_SCRIPT){
+    clients = clients.filter(x=>x.id!==clientId);
+    localSaveClients(clients);
+    if(onDone) onDone();
+    return;
+  }
+  google.script.run
+    .withSuccessHandler(()=>{
+      clients = clients.filter(x=>x.id!==clientId);
+      if(onDone) onDone();
+    })
+    .withFailureHandler(err=>alert("Client could not be deleted: " + (err.message || err)))
+    .deleteClient(clientId);
+}
+
+function markClientReportSent(clientId, nextDue, onDone){
+  if(!IS_APPS_SCRIPT){
+    const c = clients.find(x=>x.id===clientId);
+    if(c) c.due = nextDue;
+    localSaveClients(clients);
+    if(onDone) onDone();
+    return;
+  }
+  google.script.run
+    .withSuccessHandler(result=>{
+      if(result && result.client){
+        const idx = clients.findIndex(x=>x.id===clientId);
+        if(idx >= 0) clients[idx] = result.client;
+      }
+      if(onDone) onDone(result);
+    })
+    .withFailureHandler(err=>alert("Could not update report date: " + (err.message || err)))
+    .updateClientDue(clientId, nextDue);
+}
+
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(dateStr); due.setHours(0,0,0,0);
+  return Math.round((due - today) / 86400000);
+}
+function dueStatus(dateStr){
+  const d = daysUntil(dateStr);
+  if(d===null) return {status:"none", days:null};
+  if(d < 0) return {status:"overdue", days:d};
+  if(d <= 3) return {status:"soon", days:d};
+  return {status:"ok", days:d};
+}
+
+function renderClients(){
+  const grid = document.getElementById('clientGrid');
+  const empty = document.getElementById('clientEmpty');
+  const strip = document.getElementById('reminderStrip');
+  grid.innerHTML = "";
+  strip.innerHTML = "";
+
+  const flagged = clients.filter(c=>{
+    const s = dueStatus(c.due).status;
+    return s==="overdue" || s==="soon";
+  }).sort((a,b)=> daysUntil(a.due) - daysUntil(b.due));
+
+  flagged.forEach(c=>{
+    const s = dueStatus(c.due);
+    const chip = document.createElement('div');
+    chip.className = "reminder-chip " + (s.status==="overdue"?"overdue":"soon");
+    const label = s.status==="overdue"
+      ? `⚠ Report for ${c.name} (${c.company}) is ${Math.abs(s.days)} day${Math.abs(s.days)!==1?'s':''} overdue`
+      : `⏰ Report for ${c.name} (${c.company}) due in ${s.days} day${s.days!==1?'s':''}`;
+    chip.innerHTML = `<span>${label}</span><span class="rc-action" data-id="${c.id}">Open →</span>`;
+    chip.querySelector('.rc-action').addEventListener('click', ()=>openClientDetail(c.id));
+    strip.appendChild(chip);
+  });
+
+  if(clients.length===0){ empty.style.display = "block"; return; }
+  empty.style.display = "none";
+
+  clients.forEach(c=>{
+    const s = dueStatus(c.due);
+    const card = document.createElement('div');
+    card.className = "client-card";
+    card.dataset.v = c.vertical;
+    const badgeText = s.status==="none" ? "No date set" : s.status==="overdue" ? `${Math.abs(s.days)}d overdue` : `Due in ${s.days}d`;
+    card.innerHTML = `
+      <h3>${c.name}</h3>
+      <div class="co">${c.company}</div>
+      <div class="role">${c.role}</div>
+      <div class="due-row">
+        <span class="due-badge ${s.status}">${badgeText}</span>
+        <span class="activity-count">${(c.activities||[]).length} log entr${(c.activities||[]).length===1?'y':'ies'}</span>
+      </div>
+    `;
+    card.addEventListener('click', ()=>openClientDetail(c.id));
+    grid.appendChild(card);
+  });
+}
+
+/* ---- Add/Edit client form ---- */
+const clientFormOverlay = document.getElementById('clientFormOverlay');
+document.getElementById('addClientBtn').addEventListener('click', ()=>{
+  editingClientId = null;
+  document.getElementById('clientFormTitle').textContent = "Add Client";
+  document.getElementById('cfName').value = "";
+  document.getElementById('cfCompany').value = "";
+  document.getElementById('cfVertical').value = "marketing";
+  document.getElementById('cfRole').value = "";
+  document.getElementById('cfDue').value = "";
+  document.getElementById('cfCadence').value = "7";
+  clientFormOverlay.classList.add('open');
+});
+document.getElementById('closeClientForm').addEventListener('click', ()=>clientFormOverlay.classList.remove('open'));
+clientFormOverlay.addEventListener('click',(e)=>{ if(e.target===clientFormOverlay) clientFormOverlay.classList.remove('open'); });
+
+document.getElementById('saveClientBtn').addEventListener('click', ()=>{
+  const name = document.getElementById('cfName').value.trim();
+  const company = document.getElementById('cfCompany').value.trim();
+  if(!name || !company){ alert("Add at least a name and company."); return; }
+
+  const data = {
+    name, company,
+    vertical: document.getElementById('cfVertical').value,
+    role: document.getElementById('cfRole').value.trim() || "—",
+    due: document.getElementById('cfDue').value,
+    cadence: parseInt(document.getElementById('cfCadence').value,10)
+  };
+
+  if(editingClientId){
+    const c = clients.find(c=>c.id===editingClientId);
+    if(!c) return;
+    Object.assign(c, data);
+    saveClientToBackend(c, "update", ()=>{
+      clientFormOverlay.classList.remove('open');
+      renderClients();
+    });
+  } else {
+    const newClient = {
+      id: "c" + Date.now(),
+      activities: [],
+      createdAt: new Date().toISOString(),
+      ...data
+    };
+    clients.push(newClient);
+    saveClientToBackend(newClient, "create", ()=>{
+      clientFormOverlay.classList.remove('open');
+      renderClients();
+    });
+  }
+});
+
+/* ---- Client detail: activity log + report ---- */
+const clientDetailOverlay = document.getElementById('clientDetailOverlay');
+document.getElementById('closeClientDetail').addEventListener('click', ()=>clientDetailOverlay.classList.remove('open'));
+clientDetailOverlay.addEventListener('click',(e)=>{ if(e.target===clientDetailOverlay) clientDetailOverlay.classList.remove('open'); });
+
+function openClientDetail(id){
+  activeClientId = id;
+  renderClientDetail();
+  clientDetailOverlay.classList.add('open');
+}
+
+function renderClientDetail(){
+  const c = clients.find(c=>c.id===activeClientId);
+  if(!c) return;
+  const s = dueStatus(c.due);
+  const body = document.getElementById('clientDetailBody');
+  const activities = (c.activities||[]).slice().reverse();
+  body.innerHTML = `
+    <div class="modal-eyebrow">${c.vertical} · ${c.company}</div>
+    <h2>${c.name}</h2>
+    <p class="subline">Hiring for: ${c.role}</p>
+    <div class="cd-meta">
+      <span class="due-badge ${s.status}">${s.status==="none" ? "No report date set" : s.status==="overdue" ? `${Math.abs(s.days)}d overdue` : `Due in ${s.days}d`}</span>
+      <span class="activity-count">Next report: ${c.due || "not set"} · Cadence: ${c.cadence==0?"one-off":"every "+c.cadence+"d"}</span>
+    </div>
+
+    <div class="modal-section">
+      <h4>Activity Log</h4>
+      <div class="add-activity-row">
+        <input type="text" id="newActivityInput" placeholder="e.g. Sourced 6 candidates via LinkedIn X-ray, shortlisted 2">
+        <button id="addActivityBtn">Log</button>
+      </div>
+      <div class="activity-list" id="activityList">
+        ${activities.length ? activities.map(a=>`<div class="activity-item"><div class="a-date">${new Date(a.date).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div><div class="a-text">${a.text}</div></div>`).join('') : '<div class="activity-item"><div class="a-text" style="color:var(--slate);">No activity logged yet — add the first entry above.</div></div>'}
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <h4>Recruitment Report</h4>
+      <button class="sourceBtn" id="genReportBtn">Generate report from activity log</button>
+      <div class="report-box" id="reportBox" style="display:none;"></div>
+      <div class="report-actions" id="reportActions" style="display:none;">
+        <button class="mini-btn" id="copyReportBtn" style="color:var(--navy); border-color:var(--line); background:var(--cream);">Copy report</button>
+        <button class="mini-btn" id="downloadReportBtn" style="color:var(--navy); border-color:var(--line); background:var(--cream);">Download .txt</button>
+        <button class="mini-btn" id="markSentBtn" style="color:var(--navy); border-color:var(--line); background:var(--cream);">Mark sent → advance next due date</button>
+      </div>
+    </div>
+
+    <button class="del-client" id="deleteClientBtn">Delete this client</button>
+  `;
+
+  document.getElementById('addActivityBtn').addEventListener('click', ()=>{
+    const input = document.getElementById('newActivityInput');
+    const text = input.value.trim();
+    if(!text) return;
+    const activity = { date: new Date().toISOString(), text };
+    addActivityToBackend(c.id, activity, ()=>{
+      renderClientDetail();
+      renderClients();
+    });
+  });
+  document.getElementById('newActivityInput').addEventListener('keydown', (e)=>{
+    if(e.key==='Enter') document.getElementById('addActivityBtn').click();
+  });
+
+  document.getElementById('genReportBtn').addEventListener('click', ()=>{
+    const box = document.getElementById('reportBox');
+    box.textContent = buildReportText(c);
+    box.style.display = "block";
+    document.getElementById('reportActions').style.display = "flex";
+  });
+
+  document.getElementById('deleteClientBtn').addEventListener('click', ()=>{
+    if(!confirm(`Delete ${c.name} and all logged activity? This can't be undone.`)) return;
+    deleteClientFromBackend(c.id, ()=>{
+      clientDetailOverlay.classList.remove('open');
+      renderClients();
+    });
+  });
+
+  wireReportButtons(c);
+}
+
+function wireReportButtons(c){
+  const copyBtn = document.getElementById('copyReportBtn');
+  const dlBtn = document.getElementById('downloadReportBtn');
+  const sentBtn = document.getElementById('markSentBtn');
+
+  if(copyBtn) copyBtn.addEventListener('click', ()=>{
+    navigator.clipboard.writeText(document.getElementById('reportBox').textContent).then(()=>{
+      copyBtn.textContent = "Copied"; setTimeout(()=>copyBtn.textContent="Copy report",1200);
+    });
+  });
+  if(dlBtn) dlBtn.addEventListener('click', ()=>{
+    const blob = new Blob([document.getElementById('reportBox').textContent], {type:"text/plain"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `${c.name.replace(/\s+/g,'_')}_recruitment_report_${new Date().toISOString().slice(0,10)}.txt`;
+    a.click(); URL.revokeObjectURL(url);
+  });
+  if(sentBtn) sentBtn.addEventListener('click', ()=>{
+    if(c.cadence && c.cadence > 0){
+      const next = new Date();
+      next.setDate(next.getDate() + c.cadence);
+      const nextDue = next.toISOString().slice(0,10);
+      markClientReportSent(c.id, nextDue, ()=>{
+        renderClientDetail();
+        renderClients();
+      });
+    } else {
+      alert("This client is set to one-off — update the due date manually if another report is needed.");
+    }
+  });
+}
+
+function buildReportText(c){
+  const now = new Date();
+  const activities = (c.activities||[]).slice().sort((a,b)=> new Date(a.date)-new Date(b.date));
+  const first = activities[0] ? new Date(activities[0].date) : (c.createdAt ? new Date(c.createdAt) : now);
+  const daysActive = Math.max(1, Math.round((now - first) / 86400000));
+  let out = "";
+  out += `RECRUITMENT REPORT\n`;
+  out += `NovaCore — Talent Acquisition as a Service\n`;
+  out += `${"—".repeat(40)}\n`;
+  out += `Client:        ${c.name} (${c.company})\n`;
+  out += `Role:          ${c.role}\n`;
+  out += `Vertical:      ${c.vertical.charAt(0).toUpperCase()+c.vertical.slice(1)}\n`;
+  out += `Report date:   ${now.toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'})}\n`;
+  out += `Search active: ${daysActive} day${daysActive!==1?'s':''}\n`;
+  out += `${"—".repeat(40)}\n\n`;
+  out += `SUMMARY\n`;
+  out += `${activities.length} update${activities.length!==1?'s':''} logged since search opened.\n\n`;
+  out += `TIMELINE\n`;
+  if(activities.length===0){
+    out += `No activity logged yet for this search.\n`;
+  } else {
+    activities.forEach(a=>{
+      const d = new Date(a.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+      out += `[${d}] ${a.text}\n`;
+    });
+  }
+  out += `\n${"—".repeat(40)}\n`;
+  out += `Next report expected: ${c.due || "not scheduled"}\n`;
+  out += `Prepared automatically by NovaCore's Role Intelligence Dashboard.\n`;
+  return out;
+}
+
+loadClientsFromBackend();
+
+/* ================= CONTENT CREATOR ================= */
+const HOOKS = {
+  placement: [
+    "Another one placed — and it didn't happen by accident.",
+    "Closed a search this week that most people would've given up on.",
+    "Six weeks. One shortlist. One hire who's already in seat."
+  ],
+  jobpost: [
+    "We're hiring for a client who's actually serious about this role.",
+    "Rare one on the board this week — worth a look even if you're not actively searching.",
+    "Not every open role deserves a post. This one does."
+  ],
+  outreach: [
+    "Saw your profile and it stopped my scroll — not a generic reason either.",
+    "I don't usually reach out cold, but your background is exactly what a client of mine needs right now.",
+    "Quick one — I think I have a role you'd actually want, not just qualify for."
+  ],
+  insight: [
+    "Something's shifting in how companies are hiring right now, and most job posts haven't caught up.",
+    "Talked to five hiring managers this month. They all said the same unexpected thing.",
+    "The market data everyone's quoting is quietly out of date — here's what's actually happening."
+  ],
+  roundup: [
+    "This week's open roles — three verticals, real budgets, real timelines.",
+    "Friday roundup: what's actually open right now, not what's been sitting stale for months.",
+    "A short list this week, but every one of these is a genuine, funded search."
+  ]
+};
+const CTAS = {
+  placement: ["Building a team in this space? Let's talk — link in the comments.", "If you're hiring for something similar, I'd love to compare notes.", "Know someone who'd be great for a role like this? Send them my way."],
+  jobpost: ["Full brief in the comments — or DM me directly.", "Tag someone this fits, or reach out if it's you.", "Details below. Happy to talk it through before you apply."],
+  outreach: ["No pressure either way — happy to share more if you're curious.", "Open to a 10-minute call this week?", "Let me know if it's worth 15 minutes, no obligation."],
+  insight: ["Curious if others are seeing the same thing — what's your read?", "What's changed on your side of the hiring table this quarter?", "Agree, disagree? Genuinely want to know."],
+  roundup: ["Full details on each in the comments.", "DM me for the brief on any of these.", "Know someone for one of these? Tag them below."]
+};
+const HASHTAG_SETS = {
+  marketing: ["#DigitalMarketingEgypt","#MarketingJobs","#HiringEgypt","#GrowthMarketing","#MENAJobs"],
+  technology: ["#TechEgypt","#HiringDevelopers","#TechJobsEgypt","#SoftwareEngineering","#MENATech"],
+  branding: ["#EmployerBranding","#BrandingMENA","#CreativeJobs","#HiringEgypt","#BrandStrategy"]
+};
+const TONE_ADJUST = {
+  professional: {open:"", close:""},
+  bold: {open:"Let's be direct: ", close:" That's the standard we work to — every time."},
+  friendly: {open:"Okay, quick share — ", close:" Happy to chat if you want the full story 🙂"}
+};
+
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+const EXTRA_BEATS = {
+  placement: ["What made this one work wasn't luck — it was three focused sourcing days before we even opened conversations, and being upfront with the client about trade-offs early instead of at offer stage.", "The shortlist was four people, not forty. Fewer, better-matched candidates beat a big pile every time."],
+  jobpost: ["What's different about this brief: the client has a defined budget band, a real start-date target, and a hiring manager who's actually blocked time for interviews this week — not a role that's been open for three months with no movement.", "We're not spraying this to every platform at once — we're talking to people who actually fit before it goes wider."],
+  outreach: ["I looked at what you've shipped, not just your title — that's usually where the actual fit shows up.", "If the timing's wrong, no worries at all — happy to stay in touch for when it is."],
+  insight: ["The pattern shows up across marketing, tech and branding hires alike — it's not sector-specific, it's structural.", "Most companies are still benchmarking against data that's a year out of date, and it's costing them good candidates."],
+  roundup: ["Each of these has a named hiring manager behind it, not a generic HR inbox — which usually means a faster, more honest process.", "If none of these fit, tell me what you're actually looking for — half of what we place never gets posted publicly."]
+};
+const PLATFORM_TIPS = {
+  linkedin: [
+    "Post between 8–10am or 12–1pm Cairo time on Tue–Thu — that's when the feed is most active for this audience.",
+    "Native text/carousel outperforms an external link in the body — drop the link in the first comment instead.",
+    "Reply to every comment in the first hour — early engagement velocity is what the algorithm rewards most.",
+    "3–5 hashtags max, mixed broad + niche (e.g. #HiringEgypt + #TechJobsEgypt) — more than that reads as spam."
+  ],
+  facebook: [
+    "Groups outperform your Page for reach right now — cross-post into 2–3 relevant Egyptian job/industry groups.",
+    "Native video or a simple image carousel beats plain text on Facebook's current ranking.",
+    "Keep the caption short with the story in the image/video — Facebook rewards watch time over read time.",
+    "Ask a direct, easy-to-answer question in the caption to seed early comments."
+  ],
+  instagram: [
+    "Caption hook has to land in the first line — the rest gets cut behind 'more'.",
+    "Carousels (3–6 slides) currently get pushed harder in Reach than single images.",
+    "Use 3–5 hashtags in the caption itself, not buried in a comment — this platform's model favors that now.",
+    "A clear CTA ('DM us', 'Save this') outperforms a passive sign-off."
+  ]
+};
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function formatPostBody(text){
+  // wrap hashtags in a styled span
+  return escapeHtml(text).split("\n").map(line=>{
+    return line.replace(/(#\w+)/g, '<span class="hlink">$1</span>');
+  }).join("<br>");
+}
+function renderPostPreview(text, platform){
+  const wrap = document.getElementById('postPreviewWrap');
+  const bodyHtml = formatPostBody(text);
+  if(platform === "linkedin"){
+    wrap.innerHTML = `
+      <div class="preview-card li-preview">
+        <div class="pv-head">
+          <div class="pv-avatar">NC</div>
+          <div class="pv-who"><b>NovaCore</b><span>Talent Acquisition as a Service · 1st</span><span class="pv-time">Just now · 🌐</span></div>
+        </div>
+        <div class="pv-body">${bodyHtml}</div>
+        <div class="pv-foot li-foot">
+          <span>👍 Like</span><span>💬 Comment</span><span>🔁 Repost</span><span>📤 Send</span>
+        </div>
+      </div>`;
+  } else if(platform === "facebook"){
+    wrap.innerHTML = `
+      <div class="preview-card fb-preview">
+        <div class="pv-head">
+          <div class="pv-avatar fb-avatar">NC</div>
+          <div class="pv-who"><b>NovaCore</b><span class="pv-time">Just now · 🌐</span></div>
+        </div>
+        <div class="pv-body">${bodyHtml}</div>
+        <div class="pv-foot fb-foot">
+          <span>👍 Like</span><span>💬 Comment</span><span>↗ Share</span>
+        </div>
+      </div>`;
+  } else {
+    wrap.innerHTML = `
+      <div class="preview-card ig-preview">
+        <div class="pv-head">
+          <div class="pv-avatar ig-avatar">NC</div>
+          <div class="pv-who"><b>novacore.egypt</b></div>
+        </div>
+        <div class="ig-image">NovaCore</div>
+        <div class="pv-foot ig-foot"><span>♡</span><span>💬</span><span>✈</span><span class="ig-save">⚑</span></div>
+        <div class="pv-body ig-caption"><b>novacore.egypt</b> ${bodyHtml}</div>
+      </div>`;
+  }
+}
+
+const VISUAL_SUGGESTIONS = {
+  marketing: ["a clean stat callout card (navy/gold) with one number that tells the story", "a before/after split graphic of the campaign result", "a short talking-head clip over B-roll of the team at work"],
+  technology: ["a code-snippet or terminal-style screenshot styled in brand colors", "a simple architecture/flow diagram of what got built", "a screen-recording clip of the product in action"],
+  branding: ["a moodboard-style grid of the visual direction", "a side-by-side of old vs. new brand assets", "a short reel of the design process, sped up"]
+};
+
+function buildFormattedOutput(basePost, format, type, vertical, hook, cta, tags){
+  const visual = pick(VISUAL_SUGGESTIONS[vertical]);
+  if(format === "image"){
+    return `${basePost}\n\n🖼 Visual suggestion: ${visual}`;
+  }
+  if(format === "carousel"){
+    const parts = basePost.split("\n\n").filter(Boolean);
+    // rebuild as slides: hook / body chunks / cta+tags
+    const middle = parts.slice(1, -1); // everything between hook and last (cta+tags likely combined at end)
+    let slides = [`SLIDE 1 (cover): ${parts[0]}`];
+    middle.forEach((m,i)=> slides.push(`SLIDE ${i+2}: ${m}`));
+    slides.push(`SLIDE ${slides.length+1} (CTA): ${cta}`);
+    return slides.join("\n\n") + `\n\n🖼 Visual direction: ${visual}\n\n${tags}`;
+  }
+  if(format === "video"){
+    return `[0–3s] HOOK (on screen + voiceover):\n"${hook}"\n\n[3–18s] BODY (voiceover over B-roll):\n${basePost.split("\n\n").slice(1,-1).join(" ")}\n\n[18–25s] CTA (on screen):\n"${cta}"\n\n🎬 Visual direction: ${visual}\n\n${tags}`;
+  }
+  if(format === "poll"){
+    const pollQ = type === "insight" ? "What's shifted most in your hiring this quarter?" : type === "jobpost" ? "What matters most when you're eyeing a new role?" : "What's the biggest bottleneck in your hiring right now?";
+    const options = type === "insight"
+      ? ["Salary expectations", "Time-to-hire", "Candidate quality", "Something else — comment below"]
+      : ["Compensation", "Growth/learning", "Team & culture", "Flexibility"];
+    return `${hook}\n\n📊 POLL: ${pollQ}\n${options.map((o,i)=>`${String.fromCharCode(65+i)}) ${o}`).join("\n")}\n\n${cta}\n\n${tags}`;
+  }
+  return basePost;
+}
+
+function popRefresh(el){
+  el.classList.remove('fade-in-up');
+  void el.offsetWidth; // force reflow to restart animation
+  el.classList.add('fade-in-up');
+}
+
+function generateContent(){
+  const topic = document.getElementById('ccTopic').value.trim() || "a role we're actively working on";
+  const type = document.getElementById('ccType').value;
+  const vertical = document.getElementById('ccVertical').value;
+  const tone = document.getElementById('ccTone').value;
+  const length = document.getElementById('ccLength').value;
+  const platform = document.getElementById('ccPlatform').value;
+  const format = document.getElementById('ccFormat').value;
+
+  const hook = pick(HOOKS[type]);
+  const cta = pick(CTAS[type]);
+  const tagCount = length === "short" ? 3 : platform === "instagram" ? 5 : 4;
+  const tags = HASHTAG_SETS[vertical].slice(0,tagCount).join(" ");
+  const toneWrap = TONE_ADJUST[tone];
+
+  let body = "";
+  if(type === "placement"){
+    body = `We just wrapped a search: ${topic}.\n\nIt's the kind of role that looks straightforward on paper and isn't — the right fit needed more than a matching skill list. That's the part of this work that doesn't show up in a job description.`;
+  } else if(type === "jobpost"){
+    body = `We're sourcing for: ${topic}.\n\nIf you've been waiting for the right move rather than any move, this might be it. Real budget, real timeline, real hiring manager who actually reviews CVs.`;
+  } else if(type === "outreach"){
+    body = `${topic}.\n\nI work with NovaCore, placing talent across marketing, tech and branding roles in Egypt and the wider region. I think there's a strong fit here — worth a short conversation either way.`;
+  } else if(type === "insight"){
+    body = `${topic}.\n\nWorth sitting with for a second, because it changes how both sides of the hiring table should be thinking about this market right now.`;
+  } else {
+    body = `Open right now: ${topic}.\n\nThese are live searches, not evergreen listings — if something here fits, don't wait on it.`;
+  }
+
+  let post;
+  if(length === "short"){
+    // trim body to first sentence only, drop extra beat
+    const firstSentence = body.split("\n\n")[0];
+    post = `${hook}\n\n${firstSentence}\n\n${cta}\n\n${tags}`;
+  } else if(length === "long"){
+    const beat1 = pick(EXTRA_BEATS[type]);
+    const beat2 = pick(EXTRA_BEATS[type].filter(b=>b!==beat1)) || "";
+    post = `${hook}\n\n${toneWrap.open}${body}\n\n${beat1}\n\n${beat2}${toneWrap.close}\n\n${cta}\n\n${tags}`;
+  } else {
+    post = `${hook}\n\n${toneWrap.open}${body}${toneWrap.close}\n\n${cta}\n\n${tags}`;
+  }
+
+  const finalPost = buildFormattedOutput(post, format, type, vertical, hook, cta, tags);
+
+  document.getElementById('ccOut').textContent = finalPost;
+  document.getElementById('ccOutHeading').textContent = document.getElementById('ccType').selectedOptions[0].text + " · " + document.getElementById('ccPlatform').selectedOptions[0].text + " · " + document.getElementById('ccFormat').selectedOptions[0].text;
+
+  renderPostPreview(post, platform);
+
+  const tipsWrap = document.getElementById('platformTips');
+  tipsWrap.innerHTML = `<div class="ptip-title">Reach playbook for ${document.getElementById('ccPlatform').selectedOptions[0].text}</div>` +
+    PLATFORM_TIPS[platform].map(t=>`<div class="ptip">${t}</div>`).join('');
+
+  document.getElementById('ccOutputBlock').classList.add('show');
+  popRefresh(document.getElementById('ccOutputBlock'));
+  popRefresh(document.getElementById('postPreviewWrap').firstElementChild || document.getElementById('postPreviewWrap'));
+}
+document.getElementById('ccGenerateBtn').addEventListener('click', generateContent);
+document.getElementById('ccRegenBtn').addEventListener('click', generateContent);
+document.querySelectorAll('#ccOutputBlock .mini-btn[data-copy]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    navigator.clipboard.writeText(document.getElementById('ccOut').textContent).then(()=>{
+      const old = btn.textContent; btn.textContent = "Copied"; setTimeout(()=>btn.textContent=old,1200);
+    });
+  });
+});
+
+/* ================= COMPETITOR INTELLIGENCE ================= */
+const COMPETITORS = [
+  {name:"tcrutr", type:"AI-powered tech RPO", verticals:["technology"], hq:"Cairo, Egypt + Riyadh, KSA",
+   desc:"An Egypt & Saudi-based startup pairing AI-driven candidate matching with human recruiters, plus EOR/employment-outsourcing services for hiring across borders. Positions itself as faster and more tech-native than traditional agencies, serving startups through enterprise on cybersecurity, dev and IT roles.",
+   services:["AI-driven sourcing","Tech-specialist recruiters","EOR / employment outsourcing","Contract & permanent hiring","Payroll & compliance"],
+   pricing:"Public project data (Clutch): minimum engagement ~$1,000, average billed rate $50–99/hr — mid-market pricing, not enterprise-tier.",
+   followers:null,
+   edge:"NovaCore's edge: three-vertical coverage (marketing + branding, not just tech) and a named, human account relationship rather than a platform-first pitch.",
+   strengths:["Fast AI-assisted shortlist turnaround","Cross-border EOR removes a hiring blocker competitors leave to the client","Cybersecurity/IT niche depth"],
+   watchouts:["Newer brand — less track record to point to than legacy players","Tech-only — no answer for a client's marketing or branding hire"],
+   site:"https://tcrutr.com/", founded:"2015", size:"Startup / boutique"},
+  {name:"WRKFORC", type:"MENA-focused RPO", verticals:["technology","marketing"], hq:"Cairo, Egypt",
+   desc:"Cairo-based end-to-end recruitment across tech, fintech, telecom and e-commerce, sourcing directly from Wuzzuf, Forasna, LinkedIn and top universities, with bilingual Arabic/English screening and a 3–7 business day shortlist SLA.",
+   services:["Direct sourcing (Wuzzuf/Forasna/LinkedIn)","Bilingual screening","EOR / PEO","Payroll outsourcing","Work-permit & immigration support"],
+   pricing:"Not publicly listed — quote-based, typical of MENA RPO providers.",
+   followers:null,
+   edge:"NovaCore's edge: purpose-built tooling (JD library, sourcing builder, live client reporting) that's visible to the client, not just a black-box shortlist.",
+   strengths:["Full workforce lifecycle (hire → payroll → immigration) under one roof","Direct sourcing pipeline from major local platforms and universities","Clear 3–7 day shortlist SLA"],
+   watchouts:["Breadth-over-depth model — generalist across sectors rather than specialist","Process likely templated across clients, less bespoke"],
+   site:"https://wrkforc.com/recruitment-egypt/", founded:"—", size:"Growth-stage"},
+  {name:"Resource Professionals", type:"IT/software specialist agency", verticals:["technology"], hq:"Cairo, Egypt",
+   desc:"One of the few Cairo agencies focused specifically on software and engineering roles, with sector-specific candidate networks for development, engineering and digital functions.",
+   services:["IT/software-only sourcing","Engineering candidate networks","Permanent placement"],
+   pricing:"Not publicly listed.",
+   followers:null,
+   edge:"NovaCore's edge: doesn't stop at tech — a client scaling a product team also needs marketing and employer-branding hires, which NovaCore covers under one retainer.",
+   strengths:["Deep, sector-specific engineering candidate network","Narrow focus means less context-switching per search"],
+   watchouts:["Single-vertical — no path to a multi-department retainer","Smaller team likely means lower concurrent search capacity"],
+   site:"https://recruitera.ai/blog/recruitment-agencies-egypt", founded:"—", size:"Boutique agency"},
+  {name:"JB Hired", type:"Executive search", verticals:["technology"], hq:"Cairo, Egypt",
+   desc:"Executive search and global talent acquisition focused on IT, SaaS and technology-driven businesses, with named placements at CPO/CTO level for fintech and financial-services clients.",
+   services:["C-level headhunting","Global talent acquisition","Tech/SaaS specialization"],
+   pricing:"Not publicly listed — typical of retained executive search (usually % of first-year salary).",
+   followers:null,
+   edge:"NovaCore's edge: built for mid-level and specialist hiring velocity, not just C-suite search — most of a growing company's hiring volume sits below the executive layer.",
+   strengths:["Credible C-level/CPO-CTO placement track record","Global reach claimed alongside local Cairo presence"],
+   watchouts:["Retained-search pricing (often 20–33% of first-year salary) prices out most mid-level roles","Not built for the recurring, high-volume hiring a growing company actually needs"],
+   site:"https://www.jbhired.com/", founded:"—", size:"Boutique / executive search"},
+  {name:"JOBMASTER", type:"Legacy generalist agency", verticals:["marketing","technology","branding"], hq:"Cairo, Egypt",
+   desc:"One of Egypt's longest-running recruitment agencies, covering entry-level through executive search with added employer-branding support and labor-law/compliance advisory.",
+   services:["Entry-to-executive recruitment","Employer branding support","Labor-law compliance advisory","Workforce strategy consulting"],
+   pricing:"Not publicly listed.",
+   followers:null,
+   edge:"NovaCore's edge: modern, self-serve tooling (Boolean/X-ray builder, live JD library) versus a traditional agency's manual, relationship-only process.",
+   strengths:["Decades of relationship capital with large local employers","Broad compliance/labor-law knowledge most boutiques lack"],
+   watchouts:["Manual, paperwork-heavy process by most accounts","Employer-branding 'support' is an add-on, not a core product like NovaCore's Content Creator"],
+   site:"https://blog.9cv9.com/top-10-best-recruitment-agencies-in-egypt-for-2025/", founded:"~1995", size:"Established agency"},
+  {name:"Udjat Agency", type:"LinkedIn/B2B marketing agency (adjacent)", verticals:["marketing","branding"], hq:"Cairo, Egypt",
+   desc:"Not a recruiter, but competes for the same client budget line — helping Egyptian B2B companies run LinkedIn content, employer-brand campaigns and lead generation.",
+   services:["LinkedIn content & ads","Employer-brand campaigns","B2B lead generation","CRM/email integration"],
+   pricing:"Not publicly listed.",
+   followers:null,
+   edge:"NovaCore's edge: can package employer-branding content (like this dashboard's Content Creator) alongside actual placements, not content in isolation.",
+   strengths:["Strong, current LinkedIn-algorithm expertise","Full-funnel: content + paid + CRM integration"],
+   watchouts:["Doesn't recruit — a client still needs a separate hiring partner","Pure marketing spend, no placement-fee ROI to point to"],
+   site:"https://www.udjatagency.com/", founded:"—", size:"Boutique agency"},
+  {name:"IBS (International Business Services)", type:"Legacy outsourcing & HR", verticals:["technology","marketing","branding"], hq:"Maadi, Cairo, Egypt",
+   desc:"Founded in 1984, one of Egypt's oldest outsourcing firms — around 400 local and multinational clients and roughly 27,000 outsourced staff, built on a transparent 'cost-plus' pricing model rather than traditional labor contracting.",
+   services:["Staff outsourcing (~27,000 headcount)","Payroll & social insurance","Labor-law consultation","Work-permit processing","Recruitment consultation"],
+   pricing:"Cost-plus model — a fixed, disclosed profit margin over production cost, marketed as 'transparent' vs. traditional labor contractors.",
+   followers:17370,
+   edge:"NovaCore's edge: IBS is built for high-volume outsourced headcount and payroll, not curated, role-specific hiring — NovaCore competes on match quality and speed for skilled roles, not bulk staffing.",
+   strengths:["40+ years of trust with 400+ multinational clients","Transparent cost-plus pricing is a real differentiator in a quote-based market"],
+   watchouts:["Built for bulk outsourced headcount, not curated specialist search","Scale this large usually means slower, more standardized process per role"],
+   site:"https://www.amcham.org.eg/recruitment/employers/6146/international-business-services-ibs", founded:"1984", size:"~27,000 outsourced staff"},
+  {name:"Premier Services & Recruitment", type:"Established HR consultancy", verticals:["technology","marketing","branding"], hq:"Maadi, Cairo, Egypt",
+   desc:"Egypt's first ISO-certified (9001) manpower company, operating since 1990 across recruitment, payroll, outsourcing and executive search for major Egyptian and GCC clients — a genuine market leader by scale, longevity and reported ~$400M+ revenue.",
+   services:["Local & overseas recruitment","Executive search","HR consultancy","Payroll & outsourcing","Training (Premier Academy)"],
+   pricing:"Not publicly listed — enterprise-scale consultancy, typically retainer + placement-fee structures.",
+   followers:112552,
+   edge:"NovaCore's edge: Premier's scale (ISO process, thousands of staff) comes with a traditional agency's pace — NovaCore's tooling (live sourcing, client dashboards, faster JD turnaround) targets clients who want speed and visibility a large legacy firm isn't built to give.",
+   strengths:["Egypt's #1 licensed agency since 1990 — unmatched brand trust","GCC mobilization network for overseas placement","In-house Premier Academy for candidate upskilling"],
+   watchouts:["Enterprise-scale process is slow and impersonal for a smaller client","No visible self-serve tooling or live reporting for clients"],
+   site:"https://premieregypt.com/", founded:"1990", size:"~5,000+ staff, $400M+ revenue"},
+  {name:"Staff Arabia", type:"Integrated HRO / staffing", verticals:["technology","marketing","branding"], hq:"Cairo, Egypt",
+   desc:"A regional HR-outsourcing group covering recruitment, executive search, payroll, EOR/PEO, offshoring and manpower supply across Egypt and the wider Arab region — a full-lifecycle workforce provider, not a specialist boutique.",
+   services:["Recruitment & executive search","Offshore/back-office outsourcing","Payroll & personnel outsourcing","EOR / Employer of Record","Manpower mobility"],
+   pricing:"Not publicly listed — quote-based enterprise HRO pricing.",
+   followers:71289,
+   edge:"NovaCore's edge: Staff Arabia sells broad HR infrastructure; NovaCore sells specialist, vertical-specific hiring expertise a generalist HRO group doesn't build deep candidate networks for.",
+   strengths:["Full-lifecycle HRO (recruit → payroll → EOR) reduces vendor count for a client","Regional footprint beyond just Egypt"],
+   watchouts:["Generalist HR infrastructure play — not built for deep, specialist candidate sourcing","Likely slower and less personal than a boutique retainer relationship"],
+   site:"https://www.linkedin.com/company/staff-arabia-egypt", founded:"—", size:"Regional HRO group"}
+];
+
+const compGrid = document.getElementById('compGrid');
+COMPETITORS.forEach((c,i)=>{
+  const card = document.createElement('div');
+  card.className = "comp-card fade-in-up";
+  card.style.animationDelay = (i*0.06)+"s";
+  card.innerHTML = `
+    <div class="comp-head">
+      <h3>${c.name}</h3>
+      <span class="comp-type">${c.type}</span>
+    </div>
+    <div class="comp-meta-row">
+      <span>📍 ${c.hq||"—"}</span>
+      <span>🗓 Founded ${c.founded}</span>
+      <span>👥 ${c.size}</span>
+      ${c.followers ? `<span>🔗 ${c.followers.toLocaleString()} LinkedIn followers</span>` : ""}
+    </div>
+    <p>${c.desc}</p>
+    <div class="comp-services">${c.services.map(s=>`<span class="svc-tag">${s}</span>`).join('')}</div>
+    <div class="comp-pricing"><b>Pricing signal:</b> ${c.pricing}</div>
+    <div class="sw-grid">
+      <div class="sw-col sw-strengths"><div class="sw-title">✅ Strengths</div><ul>${(c.strengths||[]).map(s=>`<li>${s}</li>`).join('')}</ul></div>
+      <div class="sw-col sw-watchouts"><div class="sw-title">⚠ Watch-outs</div><ul>${(c.watchouts||[]).map(s=>`<li>${s}</li>`).join('')}</ul></div>
+    </div>
+    <div class="comp-edge"><b>Where NovaCore differs —</b> ${c.edge}</div>
+    <div class="comp-links">
+      <a href="${c.site}" target="_blank" rel="noopener">Visit / source →</a>
+      <a href="https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(c.name)}" target="_blank" rel="noopener">Find on LinkedIn →</a>
+    </div>
+  `;
+  compGrid.appendChild(card);
+});
+
+/* Follower comparison bar chart (only where publicly verifiable) */
+const followerData = COMPETITORS.filter(c=>c.followers).sort((a,b)=>b.followers-a.followers);
+const maxFollowers = Math.max(...followerData.map(c=>c.followers));
+const chartRows = followerData.map(c=>{
+  const pct = Math.round((c.followers / maxFollowers) * 100);
+  return `<div class="bar-row">
+    <div class="bar-label">${c.name}</div>
+    <div class="bar-track"><div class="bar-fill" style="--target:${pct}%"></div></div>
+    <div class="bar-value">${c.followers.toLocaleString()}</div>
+  </div>`;
+}).join('');
+
+/* Founding-year timeline */
+const foundedData = COMPETITORS.filter(c=>c.founded && c.founded!=="—" && c.founded!=="Today").map(c=>({name:c.name, year:parseInt(c.founded.replace(/[^0-9]/g,''))})).filter(c=>!isNaN(c.year));
+foundedData.push({name:"NovaCore", year:new Date().getFullYear()});
+foundedData.sort((a,b)=>a.year-b.year);
+const minYear = foundedData[0].year, maxYear = foundedData[foundedData.length-1].year;
+const timelineDots = foundedData.map(c=>{
+  const pct = maxYear===minYear ? 50 : Math.round(((c.year-minYear)/(maxYear-minYear))*100);
+  const isNova = c.name==="NovaCore";
+  return `<div class="tl-dot ${isNova?'tl-nova':''}" style="left:${pct}%;"><div class="tl-point"></div><div class="tl-label">${c.name}<br><span>${c.year}</span></div></div>`;
+}).join('');
+const timelineListItems = foundedData.slice().reverse().map(c=>{
+  const isNova = c.name==="NovaCore";
+  return `<div class="tl-row ${isNova?'tl-nova-row':''}"><span class="tl-year">${c.year}</span><span class="tl-name">${c.name}</span></div>`;
+}).join('');
+
+document.querySelector('#competitorsView .sourcing-wrap').insertAdjacentHTML('beforeend', `
+  <div class="sourcing-panel" style="margin-top:16px;">
+    <h2>LinkedIn Presence — Where Data Is Public</h2>
+    <p>Not every competitor discloses follower counts, but for the three that do, here's the scale gap NovaCore is up against.</p>
+    <div class="bar-chart">${chartRows}</div>
+  </div>
+
+  <div class="sourcing-panel" style="margin-top:16px;">
+    <h2>Founding Timeline</h2>
+    <p>How long each player has been building trust in this market versus NovaCore starting today.</p>
+    <div class="timeline-wrap tl-desktop">
+      <div class="timeline-line"></div>
+      ${timelineDots}
+    </div>
+    <div class="tl-mobile-list">${timelineListItems}</div>
+  </div>
+`);
+
+/* Comparison table: NovaCore vs the market */
+const NOVACORE_ROW = {name:"NovaCore", founded:"Today", size:"Boutique — you"};
+const compareSet = [NOVACORE_ROW, ...COMPETITORS.filter(c=>["IBS (International Business Services)","Premier Services & Recruitment","tcrutr","WRKFORC"].includes(c.name))];
+const compareRows = compareSet.map(c=>{
+  const isNova = c.name === "NovaCore";
+  return `<tr class="${isNova ? 'nova-row' : ''}">
+    <td>${c.name}</td>
+    <td>${c.founded || "—"}</td>
+    <td>${c.size || "—"}</td>
+    <td>${isNova ? "Marketing + Technology + Branding" : (c.verticals ? c.verticals.map(v=>v[0].toUpperCase()+v.slice(1)).join(", ") : "—")}</td>
+    <td>${isNova ? "Live JD library, sourcing builder, client reporting" : "Manual / relationship-driven"}</td>
+  </tr>`;
+}).join('');
+
+document.querySelector('#competitorsView .sourcing-wrap').insertAdjacentHTML('beforeend', `
+  <div class="sourcing-panel" style="margin-top:16px;">
+    <h2>NovaCore vs the Market</h2>
+    <p>Where NovaCore sits next to the biggest and longest-established players.</p>
+    <div style="overflow-x:auto; margin-top:18px;">
+      <table class="compare-table">
+        <thead><tr><th>Company</th><th>Founded</th><th>Scale</th><th>Verticals</th><th>How they operate</th></tr></thead>
+        <tbody>${compareRows}</tbody>
+      </table>
+    </div>
+  </div>
+`);
+
+document.querySelector('#competitorsView .sourcing-wrap').insertAdjacentHTML('beforeend', `
+  <div class="comp-note">
+    <b>On "24/7" competitor monitoring —</b> what's on this page is a real, current snapshot, but it's static: it won't notice on its own if tcrutr changes its pricing page tomorrow or a new startup launches next month. True around-the-clock monitoring needs the same kind of scheduled backend job as the JD/news refresh — a daily or weekly automated check against each competitor's site and LinkedIn page, flagging changes into a feed here. Say the word and I'll wire that into the same GitHub Action once it's built.
+  </div>
+`);
+
+/* ================= CV ANALYSIS ================= */
+const ALL_ROLES_FLAT = [...JOBS.marketing, ...JOBS.technology, ...JOBS.branding];
+const cvVerticalSelect = document.getElementById('cvVertical');
+const cvRoleSelect = document.getElementById('cvRole');
+function populateCvRoles(){
+  const v = cvVerticalSelect.value;
+  cvRoleSelect.innerHTML = `<option value="">Any role in this vertical</option>` +
+    JOBS[v].map(j=>`<option value="${j.title}">${j.title}</option>`).join('');
+}
+cvVerticalSelect.addEventListener('change', populateCvRoles);
+populateCvRoles();
+
+const ACTION_VERBS = ["led","managed","built","launched","designed","developed","implemented","increased","reduced","improved","created","delivered","optimized","drove","achieved","negotiated","coordinated","executed","scaled","owned","spearheaded","streamlined"];
+const PASSIVE_MARKERS = ["was responsible for","duties included","worked on","helped with","involved in","assisted with"];
+
+function analyzeCV(){
+  const text = document.getElementById('cvText').value.trim();
+  if(text.length < 40){ alert("Paste more of the CV text — there's not enough here to analyze."); return; }
+  const lower = text.toLowerCase();
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+
+  // --- Section detection ---
+  const sections = {
+    "Contact info": /\b(email|@|phone|\+20|linkedin\.com)\b/i.test(text),
+    "Summary/Objective": /(summary|objective|profile)/i.test(text),
+    "Experience": /(experience|employment history|work history)/i.test(text),
+    "Education": /(education|university|bachelor|b\.sc|degree)/i.test(text),
+    "Skills": /(skills|proficient|competenc)/i.test(text)
+  };
+  const sectionsFound = Object.values(sections).filter(Boolean).length;
+  const structureScore = Math.round((sectionsFound / 5) * 100);
+
+  // --- Achievements: quantified results ---
+  const numberMatches = (text.match(/\b\d+(\.\d+)?%|\b\d{2,}\b/g) || []).length;
+  const achievementScore = Math.min(100, numberMatches * 12);
+
+  // --- Action verbs vs passive language ---
+  const verbHits = ACTION_VERBS.filter(v=>lower.includes(v)).length;
+  const passiveHits = PASSIVE_MARKERS.filter(v=>lower.includes(v)).length;
+  const languageScore = Math.max(0, Math.min(100, (verbHits * 10) - (passiveHits * 12)));
+
+  // --- Keyword match against selected role(s) ---
+  const roleTitle = document.getElementById('cvRole').value;
+  const vertical = cvVerticalSelect.value;
+  const rolesToCheck = roleTitle ? [ALL_ROLES_FLAT.find(j=>j.title===roleTitle)] : JOBS[vertical];
+  const skillSet = [...new Set(rolesToCheck.flatMap(j=>j.analysis.skills))];
+  const hits = skillSet.filter(s=>lower.includes(s.toLowerCase()));
+  const misses = skillSet.filter(s=>!lower.includes(s.toLowerCase()));
+  const keywordScore = skillSet.length ? Math.round((hits.length / skillSet.length) * 100) : 50;
+
+  // --- Length / ATS readiness ---
+  let lengthScore;
+  if(wordCount < 150) lengthScore = 30;
+  else if(wordCount < 300) lengthScore = 70;
+  else if(wordCount <= 900) lengthScore = 100;
+  else if(wordCount <= 1300) lengthScore = 75;
+  else lengthScore = 45;
+
+  const overall = Math.round(structureScore*0.25 + achievementScore*0.2 + languageScore*0.15 + keywordScore*0.25 + lengthScore*0.15);
+
+  renderCvResults({overall, structureScore, achievementScore, languageScore, keywordScore, lengthScore, sections, hits, misses, wordCount, numberMatches, verbHits, passiveHits});
+}
+
+function scoreVerdict(score){
+  if(score >= 80) return {label:"Strong — ready to shortlist", color:"#3EBD7E"};
+  if(score >= 60) return {label:"Solid — a few fixable gaps", color:"#C9A227"};
+  if(score >= 40) return {label:"Needs work before client-ready", color:"#D98A3D"};
+  return {label:"Significant gaps — screen carefully", color:"#D9573C"};
+}
+
+function gaugeSVG(score, color){
+  const r = 50, c = 2*Math.PI*r;
+  const offset = c - (score/100)*c;
+  return `<svg width="120" height="120" viewBox="0 0 120 120">
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="10"/>
+    <circle cx="60" cy="60" r="${r}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"
+      stroke-dasharray="${c}" stroke-dashoffset="${offset}" style="transition:stroke-dashoffset 1s ease;"/>
+  </svg>`;
+}
+
+function renderCvResults(d){
+  const box = document.getElementById('cvResults');
+  const verdict = scoreVerdict(d.overall);
+  const subs = [
+    {label:"Structure", score:d.structureScore},
+    {label:"Achievements (quantified)", score:d.achievementScore},
+    {label:"Active language", score:d.languageScore},
+    {label:"Role keyword match", score:d.keywordScore},
+    {label:"Length / readability", score:d.lengthScore}
+  ];
+
+  box.innerHTML = `
+    <div class="cv-score-row">
+      <div class="cv-gauge">${gaugeSVG(d.overall, verdict.color)}
+        <div class="cv-gauge-num"><b>${d.overall}</b><span>/ 100</span></div>
+      </div>
+      <div class="cv-verdict">
+        <h3>${verdict.label}</h3>
+        <p>${d.wordCount} words · ${d.numberMatches} quantified result${d.numberMatches!==1?'s':''} found · ${d.verbHits} strong action verb${d.verbHits!==1?'s':''}${d.passiveHits ? `, ${d.passiveHits} passive phrase${d.passiveHits!==1?'s':''} to tighten` : ''}.</p>
+      </div>
+    </div>
+
+    <div class="cv-subscores">
+      ${subs.map(s=>`
+        <div class="cv-sub">
+          <div class="cs-top"><span>${s.label}</span><span>${s.score}</span></div>
+          <div class="bar-track"><div class="bar-fill" style="--target:${s.score}%"></div></div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="cv-panels">
+      <div class="cv-panel">
+        <h4>Section checklist</h4>
+        <div class="cv-checklist">
+          ${Object.entries(d.sections).map(([label,found])=>`
+            <div class="cv-check-item"><span class="cv-check-icon ${found?'yes':'no'}">${found?'✓':'✕'}</span>${label}</div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="cv-panel">
+        <h4>Keyword match — ${d.hits.length}/${d.hits.length+d.misses.length}</h4>
+        <div class="cv-kw-cloud">
+          ${d.hits.map(k=>`<span class="kw-hit">✓ ${k}</span>`).join('')}
+          ${d.misses.map(k=>`<span class="kw-miss">✕ ${k}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="cv-disclaimer">This is a rule-based keyword/structure scorer, not a human reviewer — it's built to flag obvious gaps fast (missing sections, no quantified results, weak keyword match), not to judge actual fit or seniority. Always pair the score with your own read of the CV before deciding.</div>
+  `;
+  box.style.display = "block";
+  popRefresh(box);
+}
+document.getElementById('cvAnalyzeBtn').addEventListener('click', analyzeCV);
+document.getElementById('cvText').addEventListener('paste', ()=>{
+  setTimeout(()=>{
+    if(document.getElementById('cvText').value.trim().length >= 40) analyzeCV();
+  }, 150);
+});
+
+/* ================= TEMPLATE WRITER ================= */
+const FORMAL_REPLACEMENTS = [
+  [/\bwe're\b/gi,"we are"], [/\btheyre\b/gi,"they are"], [/\bdont\b/gi,"do not"],
+  [/\bcant\b/gi,"cannot"], [/\bwont\b/gi,"will not"], [/\bbc\b/gi,"because"],
+  [/\basap\b/gi,"as soon as possible"], [/\bgonna\b/gi,"going to"], [/\bwanna\b/gi,"want to"],
+  [/\bkinda\b/gi,"somewhat"], [/\byeah\b/gi,"yes"], [/\bok\b/gi,"acceptable"],
+  [/\bi'll\b/gi,"I will"], [/\bwe'll\b/gi,"we will"], [/\bit's\b/gi,"it is"],
+  [/\bi'm\b/gi,"I am"], [/\bthats\b/gi,"that is"], [/\blol\b/gi,""], [/\bhaha\b/gi,""],
+  [/!{2,}/g,"."], [/\.\.\.+/g,"."]
+];
+function formalize(str){
+  let s = str;
+  FORMAL_REPLACEMENTS.forEach(([pat,rep])=> s = s.replace(pat,rep));
+  s = s.replace(/\s{2,}/g," ").trim();
+  if(s.length) s = s.charAt(0).toUpperCase() + s.slice(1);
+  if(s.length && !/[.!?]$/.test(s)) s += ".";
+  return s;
+}
+
+const TPL_HEADERS = {
+  memo: "INTERNAL MEMORANDUM",
+  client: "CLIENT UPDATE",
+  proposal: "PROPOSAL SUMMARY",
+  jd: "FORMAL JOB DESCRIPTION"
+};
+
+function generateTemplate(){
+  const raw = document.getElementById('tplNotes').value.trim();
+  if(!raw){ alert("Add a few notes first — even rough ones."); return; }
+  const type = document.getElementById('tplType').value;
+  const recipient = document.getElementById('tplRecipient').value.trim();
+  const now = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+
+  // split rough notes into clauses on common separators
+  const clauses = raw.split(/[\n,;]+|(?<=\.)\s+/).map(c=>c.trim()).filter(c=>c.length>2);
+  const bullets = clauses.map(c=>"— " + formalize(c));
+
+  let out = "";
+  out += `${TPL_HEADERS[type]}\n`;
+  out += `NovaCore — Talent Acquisition as a Service\n`;
+  out += `${"—".repeat(42)}\n`;
+  out += `Date:      ${now}\n`;
+  if(recipient) out += `To:        ${recipient}\n`;
+  out += `${"—".repeat(42)}\n\n`;
+
+  if(type === "client"){
+    out += `Dear ${recipient || "Colleague"},\n\n`;
+    out += `Please find below a summary of the current status of your engagement with NovaCore.\n\n`;
+  } else if(type === "proposal"){
+    out += `The following outlines the key points for consideration.\n\n`;
+  } else if(type === "jd"){
+    out += `The following sets out the formal requirements for this position.\n\n`;
+  } else {
+    out += `The following points are noted for the record.\n\n`;
+  }
+
+  out += bullets.join("\n") + "\n\n";
+
+  if(type === "client"){
+    out += `Please let us know if you require any further clarification on the above.\n\nKind regards,\nNovaCore`;
+  } else if(type === "proposal"){
+    out += `We welcome the opportunity to discuss the above in further detail at your convenience.`;
+  } else if(type === "jd"){
+    out += `This description reflects the primary duties of the role and may be subject to reasonable amendment.`;
+  } else {
+    out += `Prepared for internal reference.`;
+  }
+
+  document.getElementById('tplOut').textContent = out;
+  document.getElementById('tplOutputBlock').classList.add('show');
+  popRefresh(document.getElementById('tplOutputBlock'));
+}
+document.getElementById('tplGenerateBtn').addEventListener('click', generateTemplate);
+document.querySelectorAll('#tplOutputBlock .mini-btn[data-copy]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    navigator.clipboard.writeText(document.getElementById('tplOut').textContent).then(()=>{
+      const old = btn.textContent; btn.textContent = "Copied"; setTimeout(()=>btn.textContent=old,1200);
+    });
+  });
+});
+document.getElementById('tplDownloadBtn').addEventListener('click', ()=>{
+  const blob = new Blob([document.getElementById('tplOut').textContent], {type:"text/plain"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `NovaCore_template_${new Date().toISOString().slice(0,10)}.txt`;
+  a.click(); URL.revokeObjectURL(url);
+});
+
+/* ================= SYNC TIMESTAMP + STATS ================= */
+function formatDate(d){
+  return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) + ' · ' +
+         d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+}
+const now = new Date();
+if(!IS_APPS_SCRIPT) document.getElementById('syncTime').textContent = "SYNCED " + formatDate(now);
+document.getElementById('newsDate').textContent = "Updated " + formatDate(now);
+document.getElementById('statMkt').textContent = JOBS.marketing.length;
+document.getElementById('statTech').textContent = JOBS.technology.length;
+document.getElementById('statBrand').textContent = JOBS.branding.length;
+
+render();
+</script>
+</body>
+</html>
