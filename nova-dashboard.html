@@ -2696,7 +2696,7 @@ document.getElementById('tplDownloadBtn').addEventListener('click', ()=>{
 
 /* ================= CANDIDATE PIPELINE (KANBAN) ================= */
 // Same Apps Script Web App URL used by the public site's application form.
-const CANDIDATES_API_URL = 'https://script.google.com/macros/s/AKfycbxRsLIbsIt7fNW26K_y47p2tf3knA0hN5HptS84MPciDkOUOTiVNIvKA_Ovq0tyF0TaUg/exec';
+const CANDIDATES_API_URL = 'https://script.google.com/macros/s/AKfycbzm9FyZ2ct_4NbNummvyVge5N8kNHuiS1190DSQ8NPY553Pfp9Crnvt1EwtHUgcxEdpmA/exec';
 
 const KANBAN_STAGES = ['New','Screening','Interview','Offer','Hired','Rejected'];
 let kanbanCandidates = [];
@@ -2706,8 +2706,7 @@ async function loadCandidates(){
   const statusEl = document.getElementById('kanbanSyncStatus');
   statusEl.textContent = 'Syncing…';
   try{
-    const res = await fetch(CANDIDATES_API_URL + '?action=list', { method:'GET' });
-    const data = await res.json();
+    const data = await jsonpRequest(CANDIDATES_API_URL + '?action=list');
     if(data.ok){
       kanbanCandidates = data.candidates || [];
       renderKanban();
@@ -2720,6 +2719,34 @@ async function loadCandidates(){
     statusEl.textContent = 'Could not reach backend';
     console.error(err);
   }
+}
+
+// JSONP loader — Apps Script Web Apps don't reliably send valid CORS headers for
+// fetch(), so we load data via a <script> tag instead, which is never subject to CORS.
+function jsonpRequest(url){
+  return new Promise((resolve, reject) => {
+    const callbackName = 'novaCoreCb_' + Date.now() + '_' + Math.floor(Math.random()*100000);
+    const script = document.createElement('script');
+
+    const cleanup = () => {
+      delete window[callbackName];
+      script.remove();
+    };
+
+    window[callbackName] = (data) => {
+      cleanup();
+      resolve(data);
+    };
+
+    script.onerror = () => {
+      cleanup();
+      reject(new Error('JSONP request failed to load'));
+    };
+
+    const sep = url.includes('?') ? '&' : '?';
+    script.src = url + sep + 'callback=' + callbackName;
+    document.body.appendChild(script);
+  });
 }
 
 function renderKanban(){
