@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -600,6 +601,55 @@
     padding:12px 14px; border-radius:8px; line-height:1.5;
   }
 
+  /* ---------- Kanban / Candidate Pipeline ---------- */
+  .kanban-head{
+    display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:14px;
+    padding:26px 6vw 10px;
+  }
+  .kanban-head h2{font-family:'Fraunces',serif; font-size:1.5rem; color:var(--navy);}
+  .kanban-head p{font-size:0.86rem; color:var(--slate); margin-top:4px;}
+  .kanban-head-actions{display:flex; align-items:center; gap:12px;}
+  .kanban-sync{font-family:'JetBrains Mono',monospace; font-size:0.72rem; color:var(--slate);}
+  .kanban-board{
+    display:grid; grid-template-columns:repeat(6, minmax(220px,1fr));
+    gap:14px; padding:14px 6vw 40px; overflow-x:auto;
+  }
+  .kanban-col{
+    background:#fff; border:1px solid var(--line); border-radius:12px;
+    min-height:200px; display:flex; flex-direction:column;
+  }
+  .kanban-col-head{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:12px 14px; border-bottom:1px solid var(--line);
+    font-weight:700; font-size:0.82rem; color:var(--navy);
+    position:sticky; top:0; background:#fff; border-radius:12px 12px 0 0;
+  }
+  .kanban-count{
+    background:var(--cream); color:var(--navy); border-radius:20px;
+    padding:2px 9px; font-size:0.74rem; font-weight:700;
+  }
+  .kanban-col-body{
+    padding:10px; display:flex; flex-direction:column; gap:10px; flex:1;
+    min-height:120px;
+  }
+  .kanban-col-body.drag-over{background:#FBF6E9;}
+  .kcard{
+    background:var(--cream); border:1px solid var(--line); border-radius:10px;
+    padding:12px; cursor:grab; font-size:0.82rem;
+  }
+  .kcard:active{cursor:grabbing;}
+  .kcard.dragging{opacity:0.4;}
+  .kcard .kc-name{font-weight:700; color:var(--navy); margin-bottom:4px;}
+  .kcard .kc-meta{color:var(--slate); font-size:0.76rem; line-height:1.5;}
+  .kcard .kc-source{
+    display:inline-block; margin-top:6px; font-size:0.68rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.03em; color:var(--gold-dark, var(--navy));
+    background:#fff; border:1px solid var(--line); border-radius:6px; padding:2px 7px;
+  }
+  @media (max-width:1000px){
+    .kanban-board{grid-template-columns:repeat(6, 260px);}
+  }
+
   /* ---------- Primary nav toggle ---------- */
   .primary-nav{
     display:flex; gap:8px; padding:16px 6vw 0;
@@ -738,7 +788,8 @@
 </header>
 
 <div class="primary-nav">
-  <button class="pnav-btn active" data-view="library">Job Library</button>
+  <button class="pnav-btn active" data-view="candidates">Candidates</button>
+  <button class="pnav-btn" data-view="library">Job Library</button>
   <button class="pnav-btn" data-view="sourcing">Sourcing Search</button>
   <button class="pnav-btn" data-view="clients">Clients &amp; Reports</button>
   <button class="pnav-btn" data-view="content">Content Creator</button>
@@ -747,7 +798,55 @@
   <button class="pnav-btn" data-view="template">Template Writer</button>
 </div>
 
-<div class="view active" id="libraryView">
+<div class="view active" id="candidatesView">
+  <div class="kanban-head">
+    <div>
+      <h2>Candidate Pipeline</h2>
+      <p>Live from the application form — drag a card to move a candidate through the pipeline.</p>
+    </div>
+    <div class="kanban-head-actions">
+      <span class="kanban-sync" id="kanbanSyncStatus">Loading…</span>
+      <button class="buildBtn" id="kanbanRefreshBtn">↻ Refresh now</button>
+    </div>
+  </div>
+  <div class="kanban-board" id="kanbanBoard">
+    <div class="kanban-col" data-stage="New">
+      <div class="kanban-col-head"><span>New</span><span class="kanban-count" id="countNew">0</span></div>
+      <div class="kanban-col-body" id="colNew"></div>
+    </div>
+    <div class="kanban-col" data-stage="Screening">
+      <div class="kanban-col-head"><span>Screening</span><span class="kanban-count" id="countScreening">0</span></div>
+      <div class="kanban-col-body" id="colScreening"></div>
+    </div>
+    <div class="kanban-col" data-stage="Interview">
+      <div class="kanban-col-head"><span>Interview</span><span class="kanban-count" id="countInterview">0</span></div>
+      <div class="kanban-col-body" id="colInterview"></div>
+    </div>
+    <div class="kanban-col" data-stage="Offer">
+      <div class="kanban-col-head"><span>Offer</span><span class="kanban-count" id="countOffer">0</span></div>
+      <div class="kanban-col-body" id="colOffer"></div>
+    </div>
+    <div class="kanban-col" data-stage="Hired">
+      <div class="kanban-col-head"><span>Hired</span><span class="kanban-count" id="countHired">0</span></div>
+      <div class="kanban-col-body" id="colHired"></div>
+    </div>
+    <div class="kanban-col" data-stage="Rejected">
+      <div class="kanban-col-head"><span>Rejected</span><span class="kanban-count" id="countRejected">0</span></div>
+      <div class="kanban-col-body" id="colRejected"></div>
+    </div>
+  </div>
+  <div class="empty" id="kanbanEmpty" style="display:none;">No candidates yet — once someone applies on the site, they'll show up here automatically.</div>
+</div>
+
+<!-- Candidate detail overlay -->
+<div class="overlay" id="candidateDetailOverlay">
+  <div class="modal">
+    <button class="close" id="closeCandidateDetail">✕</button>
+    <div id="candidateDetailBody"></div>
+  </div>
+</div>
+
+<div class="view" id="libraryView">
   <div class="tabs">
     <div class="tab-row">
       <button class="tab active" data-v="marketing"><span class="swatch"></span>Marketing</button>
@@ -1375,6 +1474,7 @@ document.querySelectorAll('.pnav-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.pnav-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
+    document.getElementById('candidatesView').classList.toggle('active', btn.dataset.view==='candidates');
     document.getElementById('libraryView').classList.toggle('active', btn.dataset.view==='library');
     document.getElementById('sourcingView').classList.toggle('active', btn.dataset.view==='sourcing');
     document.getElementById('clientsView').classList.toggle('active', btn.dataset.view==='clients');
@@ -1383,11 +1483,13 @@ document.querySelectorAll('.pnav-btn').forEach(btn=>{
     document.getElementById('cvView').classList.toggle('active', btn.dataset.view==='cv');
     document.getElementById('templateView').classList.toggle('active', btn.dataset.view==='template');
     if(btn.dataset.view==='clients') renderClients();
+    if(btn.dataset.view==='candidates') loadCandidates();
   });
 });
 
 function switchToPrimary(view){
   document.querySelectorAll('.pnav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  document.getElementById('candidatesView').classList.toggle('active', view==='candidates');
   document.getElementById('libraryView').classList.toggle('active', view==='library');
   document.getElementById('sourcingView').classList.toggle('active', view==='sourcing');
   document.getElementById('clientsView').classList.toggle('active', view==='clients');
@@ -1396,6 +1498,7 @@ function switchToPrimary(view){
   document.getElementById('cvView').classList.toggle('active', view==='cv');
   document.getElementById('templateView').classList.toggle('active', view==='template');
   if(view==='clients') renderClients();
+  if(view==='candidates') loadCandidates();
 }
 
 /* ================= SOURCING PRESETS ================= */
@@ -2590,6 +2693,154 @@ document.getElementById('tplDownloadBtn').addEventListener('click', ()=>{
   a.href = url; a.download = `NovaCore_template_${new Date().toISOString().slice(0,10)}.txt`;
   a.click(); URL.revokeObjectURL(url);
 });
+
+/* ================= CANDIDATE PIPELINE (KANBAN) ================= */
+// Same Apps Script Web App URL used by the public site's application form.
+const CANDIDATES_API_URL = 'https://script.google.com/macros/s/AKfycbxRsLIbsIt7fNW26K_y47p2tf3knA0hN5HptS84MPciDkOUOTiVNIvKA_Ovq0tyF0TaUg/exec';
+
+const KANBAN_STAGES = ['New','Screening','Interview','Offer','Hired','Rejected'];
+let kanbanCandidates = [];
+let kanbanPollTimer = null;
+
+async function loadCandidates(){
+  const statusEl = document.getElementById('kanbanSyncStatus');
+  statusEl.textContent = 'Syncing…';
+  try{
+    const res = await fetch(CANDIDATES_API_URL + '?action=list', { method:'GET' });
+    const data = await res.json();
+    if(data.ok){
+      kanbanCandidates = data.candidates || [];
+      renderKanban();
+      statusEl.textContent = 'Synced ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+    } else {
+      statusEl.textContent = 'Sync error — see console';
+      console.error(data.error);
+    }
+  } catch(err){
+    statusEl.textContent = 'Could not reach backend';
+    console.error(err);
+  }
+}
+
+function renderKanban(){
+  const board = document.getElementById('kanbanBoard');
+  const emptyState = document.getElementById('kanbanEmpty');
+  emptyState.style.display = kanbanCandidates.length ? 'none' : 'block';
+
+  KANBAN_STAGES.forEach(stage=>{
+    const col = document.getElementById('col' + stage);
+    const countEl = document.getElementById('count' + stage);
+    col.innerHTML = '';
+    const items = kanbanCandidates.filter(c => (c.Stage || 'New') === stage);
+    countEl.textContent = items.length;
+    items.forEach(c => col.appendChild(buildKanbanCard(c)));
+  });
+}
+
+function buildKanbanCard(c){
+  const card = document.createElement('div');
+  card.className = 'kcard';
+  card.draggable = true;
+  card.dataset.id = c.ID;
+  card.innerHTML = `
+    <div class="kc-name">${escapeHtml(c['Full Name'] || 'Unnamed')}</div>
+    <div class="kc-meta">${escapeHtml(c['Experience (Overall)'] || '—')} exp · ${escapeHtml(c['Last Salary'] || '—')}</div>
+    <div class="kc-meta">${escapeHtml(c.Phone || '')}</div>
+    ${c.Source ? `<span class="kc-source">${escapeHtml(c.Source)}</span>` : ''}
+  `;
+  card.addEventListener('dragstart', ()=>{
+    card.classList.add('dragging');
+  });
+  card.addEventListener('dragend', ()=>{
+    card.classList.remove('dragging');
+  });
+  card.addEventListener('click', ()=> openCandidateDetail(c));
+  return card;
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// Drag-and-drop wiring for each column
+document.querySelectorAll('.kanban-col-body').forEach(col=>{
+  col.addEventListener('dragover', (e)=>{
+    e.preventDefault();
+    col.classList.add('drag-over');
+  });
+  col.addEventListener('dragleave', ()=> col.classList.remove('drag-over'));
+  col.addEventListener('drop', (e)=>{
+    e.preventDefault();
+    col.classList.remove('drag-over');
+    const dragging = document.querySelector('.kcard.dragging');
+    if(!dragging) return;
+    const id = dragging.dataset.id;
+    const newStage = col.closest('.kanban-col').dataset.stage;
+    col.appendChild(dragging);
+    updateCandidateStage(id, newStage);
+  });
+});
+
+async function updateCandidateStage(id, newStage){
+  // Optimistically update local state
+  const c = kanbanCandidates.find(x => x.ID === id);
+  if(c) c.Stage = newStage;
+  renderKanban();
+
+  try{
+    await fetch(CANDIDATES_API_URL, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{ 'Content-Type':'text/plain' },
+      body: JSON.stringify({ formType:'updateStage', id, newStage })
+    });
+  } catch(err){
+    console.error('Failed to update stage', err);
+  }
+}
+
+function openCandidateDetail(c){
+  const overlay = document.getElementById('candidateDetailOverlay');
+  const body = document.getElementById('candidateDetailBody');
+  body.innerHTML = `
+    <div class="modal-eyebrow">Candidate</div>
+    <h2>${escapeHtml(c['Full Name'] || 'Unnamed')}</h2>
+    <div class="form-grid" style="margin-top:20px;">
+      <div class="field"><label>Email</label><div>${escapeHtml(c.Email || '—')}</div></div>
+      <div class="field"><label>Phone</label><div>${escapeHtml(c.Phone || '—')}</div></div>
+      <div class="field"><label>Last Salary</label><div>${escapeHtml(c['Last Salary'] || '—')}</div></div>
+      <div class="field"><label>Experience (Overall)</label><div>${escapeHtml(c['Experience (Overall)'] || '—')}</div></div>
+      <div class="field"><label>Experience (Field)</label><div>${escapeHtml(c['Experience (Field)'] || '—')}</div></div>
+      <div class="field"><label>Source</label><div>${escapeHtml(c.Source || '—')}</div></div>
+      <div class="field"><label>LinkedIn</label><div>${c.LinkedIn ? `<a href="${escapeHtml(c.LinkedIn)}" target="_blank">${escapeHtml(c.LinkedIn)}</a>` : '—'}</div></div>
+      <div class="field"><label>CV</label><div>${c['CV Link'] ? `<a href="${escapeHtml(c['CV Link'])}" target="_blank">View CV</a>` : '—'}</div></div>
+    </div>
+    <div class="field" style="margin-top:14px;"><label>Portfolio / Projects</label><div>${escapeHtml(c['Portfolio/Projects'] || '—')}</div></div>
+    <div style="margin-top:20px;">
+      <label style="font-size:0.7rem; font-weight:600; color:var(--navy);">Move to stage</label>
+      <select id="candidateStageSelect" style="margin-top:6px; width:100%; padding:10px; border:1px solid var(--line); border-radius:8px;">
+        ${KANBAN_STAGES.map(s => `<option value="${s}" ${((c.Stage||'New')===s)?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+  `;
+  document.getElementById('candidateStageSelect').addEventListener('change', (e)=>{
+    updateCandidateStage(c.ID, e.target.value);
+  });
+  overlay.classList.add('open');
+}
+
+document.getElementById('closeCandidateDetail').addEventListener('click', ()=>{
+  document.getElementById('candidateDetailOverlay').classList.remove('open');
+});
+document.getElementById('candidateDetailOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'candidateDetailOverlay') e.target.classList.remove('open');
+});
+
+document.getElementById('kanbanRefreshBtn').addEventListener('click', loadCandidates);
+
+// Initial load (Candidates is the default view) + poll every 30s for new applicants
+loadCandidates();
+kanbanPollTimer = setInterval(loadCandidates, 30000);
 
 /* ================= SYNC TIMESTAMP + STATS ================= */
 function formatDate(d){
