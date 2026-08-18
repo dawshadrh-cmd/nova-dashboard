@@ -2849,11 +2849,37 @@ function openCandidateDetail(c){
         ${KANBAN_STAGES.map(s => `<option value="${s}" ${((c.Stage||'New')===s)?'selected':''}>${s}</option>`).join('')}
       </select>
     </div>
+    <button id="deleteCandidateBtn" style="margin-top:18px; width:100%; padding:12px; border:1px solid #C0392B; border-radius:8px; background:#fff; color:#C0392B; font-weight:700; font-size:0.85rem; cursor:pointer;">
+      🗑 Delete candidate
+    </button>
   `;
   document.getElementById('candidateStageSelect').addEventListener('change', (e)=>{
     updateCandidateStage(c.ID, e.target.value);
   });
+  document.getElementById('deleteCandidateBtn').addEventListener('click', ()=>{
+    if(confirm(`Delete ${c['Full Name'] || 'this candidate'}? This removes them from the Sheet and the pipeline permanently.`)){
+      deleteCandidate(c.ID);
+    }
+  });
   overlay.classList.add('open');
+}
+
+async function deleteCandidate(id){
+  // Optimistically remove from local UI immediately
+  kanbanCandidates = kanbanCandidates.filter(x => x.ID !== id);
+  renderKanban();
+  document.getElementById('candidateDetailOverlay').classList.remove('open');
+
+  try{
+    await fetch(CANDIDATES_API_URL, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{ 'Content-Type':'text/plain' },
+      body: JSON.stringify({ formType:'deleteCandidate', id })
+    });
+  } catch(err){
+    console.error('Failed to delete candidate', err);
+  }
 }
 
 document.getElementById('closeCandidateDetail').addEventListener('click', ()=>{
